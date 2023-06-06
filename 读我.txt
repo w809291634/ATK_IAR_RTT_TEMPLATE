@@ -1,0 +1,5 @@
+工程文件放在此目录中。放在zonesion这样的目录
+如果直接拉取下来的话，直接这么存放template-use ccm文件夹放在rtthread的同级目录。和include文件夹同级
+
+
+此工程适用于 PLUS节点，一个基础工程示例，可以拓展
