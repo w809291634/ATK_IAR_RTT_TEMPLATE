@@ -9,36 +9,39 @@
  */
 #include "board.h"
 
-#ifdef RT_USING_SERIAL
-#include "drv_usart.h"
-#endif
+/** 用户编写部分 **/
 
-#ifdef RT_USING_FINSH
-#include <finsh.h>
-static void reboot(uint8_t argc, char **argv)
-{
-    rt_hw_cpu_reset();
-}
-FINSH_FUNCTION_EXPORT_ALIAS(reboot, __cmd_reboot, Reboot System);
-#endif /* RT_USING_FINSH */
-
-#ifndef RT_HEAP_USING_CCMRAM_AUTO_ALLOC 
-	#define RT_HEAP_SIZE 2000           // use: RT_HEAP_SIZE*4 (Byte)
 #ifdef RT_HEAP_USING_CCMRAM
-	static uint32_t rt_heap[RT_HEAP_SIZE] CCMRAM;     
-#else
-  static uint32_t rt_heap[RT_HEAP_SIZE];  
-#endif
-	RT_WEAK void *rt_heap_begin_get(void)
-	{
-		return rt_heap;
-	}
- 
-	RT_WEAK void *rt_heap_end_get(void)
-	{
-		return rt_heap + RT_HEAP_SIZE;
-	}
-#endif  //RT_HEAP_USING_CCMRAM_AUTO_ALLOC
+#ifndef RT_CCMRAM_AUTO_ALLOC
+
+#define RT_HEAP_SIZE 7680                           // use: RT_HEAP_SIZE*4 (Byte)
+#pragma default_variable_attributes = @ ".sram"
+static uint32_t rt_heap[RT_HEAP_SIZE];              // 使用CCM的RAM空间
+#pragma default_variable_attributes =
+RT_WEAK void *rt_heap_begin_get(void)
+{
+  return rt_heap;
+}
+
+RT_WEAK void *rt_heap_end_get(void)
+{
+  return rt_heap + RT_HEAP_SIZE;
+}
+#endif  //RT_CCMRAM_AUTO_ALLOC
+
+#else // 不使用CCM。使用0x2**的RAM
+#define RT_HEAP_SIZE 7680                           // use: RT_HEAP_SIZE*4 (Byte)
+static uint32_t rt_heap[RT_HEAP_SIZE];  
+RT_WEAK void *rt_heap_begin_get(void)
+{
+  return rt_heap;
+}
+
+RT_WEAK void *rt_heap_end_get(void)
+{
+  return rt_heap + RT_HEAP_SIZE;
+} 
+#endif  //RT_HEAP_USING_CCMRAM 
 
 /* SystemClock_Config */
 void SystemClock_Config(void)
@@ -88,6 +91,36 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 }
+
+// 微秒延时函数
+void hw_us_delay(unsigned int us)
+{
+    unsigned int start=0, now=0, reload=0, us_tick=0 ,tcnt=0 ;
+    start = SysTick->VAL;                       //systick的当前计数值（起始值）
+    reload = SysTick->LOAD;                     //systick的重载值
+    us_tick = SystemCoreClock / 1000000UL;      //1us下的systick计数值，configCPU_CLOCK_HZ为1s下的计数值，需要配置systick时钟源为HCLK
+    do {
+      now = SysTick->VAL;                       //systick的当前计数值
+      if(now!=start){
+        tcnt += now < start ? start - now : reload - now + start;    //获取当前systick经过的tick数量，统一累加到tcnt中
+        start=now;                              //重新获取systick的当前计数值（起始值）
+      }
+    } while(tcnt < us_tick * us);               //如果超出，延时完成
+}
+
+/** 拷贝drv_common.c部分 **/
+#ifdef RT_USING_SERIAL
+#include "drv_usart.h"
+#endif
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+static void reboot(uint8_t argc, char **argv)
+{
+    rt_hw_cpu_reset();
+}
+FINSH_FUNCTION_EXPORT_ALIAS(reboot, __cmd_reboot, Reboot System);
+#endif /* RT_USING_FINSH */
 
 /* SysTick configuration */
 void rt_hw_systick_init(void)
@@ -219,11 +252,11 @@ RT_WEAK void rt_hw_board_init()
 
     /* Heap initialization */
 #if defined(RT_USING_HEAP)  
-#ifdef RT_HEAP_USING_CCMRAM_AUTO_ALLOC
+#if defined(RT_CCMRAM_AUTO_ALLOC)
     rt_system_heap_init((void *)HEAP_BEGIN, (void *)HEAP_END);
 #else
     rt_system_heap_init(rt_heap_begin_get(), rt_heap_end_get());
-#endif  // RT_HEAP_USING_CCMRAM_AUTO_ALLOC
+#endif  // RT_CCMRAM_AUTO_ALLOC
 #endif  // RT_USING_HEAP
     /* Pin driver initialization is open by default */
 #ifdef RT_USING_PIN
@@ -245,3 +278,4 @@ RT_WEAK void rt_hw_board_init()
     rt_components_board_init();
 #endif
 }
+

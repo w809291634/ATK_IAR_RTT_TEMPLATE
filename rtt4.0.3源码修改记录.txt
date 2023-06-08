@@ -1,0 +1,41 @@
+1、为了适配CmBacktrace（context_iar.S拷贝到工程目录）
+	修改4.0.3\libcpu\arm\cortex-m4\context_iar.S
+	20段   #include <rtconfig.h>
+
+	218段  #if !defined RT_USING_CMBACKTRACE
+				IMPORT rt_hw_hard_fault_exception
+				EXPORT HardFault_Handler
+			HardFault_Handler:
+
+
+				ORR     lr, lr, #0x04
+				BX      lr
+	253段  #endif
+				END
+
+2、修改IAR的报错（没办法，必须手动改）
+	4.0.3\bsp\stm32\libraries\STM32F4xx_HAL\CMSIS\Include\cmsis_iccarm.h
+	#ifndef   __RESTRICT
+	//  #define __RESTRICT            __restrict
+	  #define __RESTRICT            restrict
+	#endif
+
+3、添加这个函数（移动到board.c文件，不再使用drv_common.c）
+	4.0.3\bsp\stm32\libraries\HAL_Drivers\drv_common.c
+	void hw_us_delay(unsigned int us)
+	{
+		unsigned int start=0, now=0, reload=0, us_tick=0 ,tcnt=0 ;
+		start = SysTick->VAL;                       //systick的当前计数值（起始值）
+		reload = SysTick->LOAD;                     //systick的重载值
+		us_tick = SystemCoreClock / 1000000UL;      //1us下的systick计数值，configCPU_CLOCK_HZ为1s下的计数值，需要配置systick时钟源为HCLK
+		do {
+		  now = SysTick->VAL;                       //systick的当前计数值
+		  if(now!=start){
+			tcnt += now < start ? start - now : reload - now + start;    //获取当前systick经过的tick数量，统一累加到tcnt中
+			start=now;                              //重新获取systick的当前计数值（起始值）
+		  }
+		} while(tcnt < us_tick * us);               //如果超出，延时完成
+	}
+
+4、定时器配置文件可能修改（没办法，必须手动改）
+	4.0.3\bsp\stm32\libraries\HAL_Drivers\config\f4\pwm_config.h

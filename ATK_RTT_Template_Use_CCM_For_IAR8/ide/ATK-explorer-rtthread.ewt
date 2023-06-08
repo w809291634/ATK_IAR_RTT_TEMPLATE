@@ -2345,9 +2345,6 @@
         <group>
             <name>libcpu</name>
             <file>
-                <name>$PROJ_DIR$\..\..\libcpu\arm\cortex-m4\context_iar.S</name>
-            </file>
-            <file>
                 <name>$PROJ_DIR$\..\..\libcpu\arm\cortex-m4\cpuport.c</name>
             </file>
         </group>
@@ -2548,6 +2545,9 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\src\board\board.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\src\board\context_iar.S</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\src\board\rtconfig.h</name>
