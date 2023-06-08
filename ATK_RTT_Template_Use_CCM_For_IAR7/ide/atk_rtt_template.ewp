@@ -732,7 +732,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>F:\1_git_code\RT-Thread-project\4.0.3\ATK_IAR_RTT_TEMPLATE\ATK_RTT_Template_Use_CCM_For_IAR7\ide\stm32f407xG_user.icf</state>
+          <state>$PROJ_DIR$\stm32f407xG_user.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
