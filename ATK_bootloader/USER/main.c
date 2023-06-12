@@ -3,7 +3,8 @@
 #include "delay.h"
 
 
-static int hardware_init()
+
+static void hardware_init()
 {
 	uart_init(115200);
 	delay_init(84);
@@ -12,15 +13,14 @@ static int hardware_init()
 
 int main(void)
 {
-	u32 t=0;
-	
-	hardware_init();
+  hardware_init();
+
+  u32 t=0;
+
   while(1){
     printf("t:%d\r\n",t);
 		delay_ms(500);
 		t++;
-		
-		
-		
+
 	}
 }

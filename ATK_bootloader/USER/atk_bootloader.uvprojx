@@ -325,7 +325,7 @@
             <wLevel>0</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>0</uC99>
+            <uC99>1</uC99>
             <uGnu>0</uGnu>
             <useXO>0</useXO>
             <v6Lang>1</v6Lang>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\FWLIB\inc;..\CONSOLE</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\FWLIB\inc;..\SHELL</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -496,7 +496,19 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>CONSOLE</GroupName>
+          <GroupName>SHELL</GroupName>
+          <Files>
+            <File>
+              <FileName>shell.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SHELL\shell.c</FilePath>
+            </File>
+            <File>
+              <FileName>ustdio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SHELL\ustdio.c</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>

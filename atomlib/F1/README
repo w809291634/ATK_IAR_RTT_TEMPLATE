@@ -1,0 +1,29 @@
+这个是我根据具体的硬件平台编写的串口驱动，准确来说是半个驱动，因为此处没有
+对串口引脚初始化的操作，原因是串口引脚有可能会被各种重定向至不同的引脚，所
+以无法做成统一的接口。同时，此处依然需要 LL 库的支持，可以理解为是对库的进
+一步封装和使用，目的是为了创建更方便的应用接口。
+其中，
+	stm32fxxx_serial.c
+	stm32fxxx_serial.h
+	stm32fxxx_serial_func.h
+组成了基本的串口硬件驱动，具体的使用如下：
+  * 1> 此驱动不包含引脚驱动，因为引脚有肯能被各种重定向。所以第一步是在 stm32cubemx 中
+  *    把串口对应的引脚使能为串口的输入输出，使能 usart 。注意不需要使能 usart 的 dma
+  *    和中断，仅选择引脚初始化和串口初始化即可。然后选择库为 LL 库。生成工程。
+  * 2> 把 stm32fxxx_serial.c 和头文件加入工程，其中 stm32fxxx_serial_func.h 仅为
+  *     stm32fxxx_serial.c 内部使用。stm32fxxx_serial.h 为所有对外接口定义。
+  * 3> include "stm32fxxx_serial.h" ,在此头文件下，打开所需要用的串口宏 USE_USARTx 
+  *    后，调用 serial_open(&ttySx,...) ;打开串口后，便可调用 
+  *    serial_write/serial_gets/serial_read 等函数进行操作。
+  * #> 有需要则在 stm32fxxx_serial.c  修改串口配置参数，比如缓存大小，是否使能 DMA 等。
+
+另，
+	stm32fxxx_console.c
+	stm32fxxx_console_os.c
+	stm32fxxx_console.h
+为基于 shell 和当前驱动库的控制台代码， _os 为带操作系统版本，操作系统为 freertos。非
+操作系统版本则基于 tasklib.c 协程控制，需要在 main.c 的 while(1) 中调用 OS_scheduler();
+串口控制台注册了一些与硬件相关的命令，如 reboot 重启，串口 iap 升级等。其中串口 iap 升级
+会擦除 flash。
+
+

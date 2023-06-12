@@ -1,0 +1,44 @@
+﻿2019/04/28：
+添加个代码示例，添加个实例记录：
+https://blog.csdn.net/yangxiangzhan/article/details/86555117
+
+文件编码格式 : UTF-8
+C语言编译版本: C99 
+
+我写的一个小型库，包括一些命令注册、命令行解析、一个简易的协程调度器和一些硬件平台下的控制台。
+其中此文件夹中的文件都与硬件平台无关，但可能与编译平台有关。此库编译版本要在 C99 以上。
+我根据不同的硬件平台分别写了不同的控制台，F1 文件夹的是 STM32F1 相关的控制台，F4 则是 F4xx 系列的控制台。
+
+两个分支主要在 shell.c 的实现不同：
+master : 主分支，对字符串进行压缩匹配的版本，速度比较快，效率较高。
+string : 不对字符串进行压缩处理的版本。
+
+文件说明：
+.
+|-- appdemo	      : 一些 demo。
+|-- F1            : F1硬件平台的相关串口控制台实现，提供串口在线升级功能。
+|-- F4            : F4硬件平台的相关串口控制台实现，提供串口在线升级功能。
+|-- LittleFS      : 收录的一个文件系统，用于 spi flash 
+|-- ReadMe
+|-- avltree.c     : 平衡二叉树相关实现代码，在注册命令较多的时候可以启用平衡二叉树进行索引匹配。
+|-- avltree.h     : 平衡二叉树头文件
+|-- containerof.h : container_of() 宏定义实现
+|-- getopt.c      : 收录的 getopt() 源码，方便在非 gcc 编译环境(如KEIL5)中实现命令选项(如 cmd -r -t 0)。
+|                   用 gcc 相关的编译平台可以 #include <unistd.h> / <getopt.h> 找到 getopt() 函数支持。
+|-- getopt.h      : getopt 头文件
+|-- heaplib.c     : 我写的简易版本的内存管理，方便在没有操作系统下进行 malloc/free 操作。也提供多线程支持配置。
+|-- heaplib.h     : 内存管理头文件
+|-- listlib.h     : 双链表实现头文件
+|-- shell.c       : 命令行相关，支持 Tab 键补全，支持上下左右箭头响应，提供参数解析，历史纪录。
+|                   支持多个交互，如串口，telnet，或者usb，可各自建立交互。
+|-- shell.h
+|-- tasklib.c     : 协程控制器。有需要的话使用协程可以简化代码的编写。我把它模拟成一个操作系统。
+|-- tasklib.h
+|-- ustdio.c      : 提供 printk 函数，重定义 printf 函数
+|-- ustdio.h
+|-- vim.c         : 这是我仿照 linux 的 vi 写的一个建议的文本编辑器，依赖 shell ，可以实现简易的文本编辑。
+`-- vim.h
+
+其中基本的命令行解析功能只需要 shell.c shell.h ustdio.c ustdio.h containerof.h 五个文件即可实现，
+其余功能为在此基础上叠加的功能。
+
