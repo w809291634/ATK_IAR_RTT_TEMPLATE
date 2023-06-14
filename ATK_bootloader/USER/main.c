@@ -1,26 +1,23 @@
 #include "stm32f4xx.h"
-#include "usart.h"
 #include "delay.h"
 
-
+#include "usart1.h"
 
 static void hardware_init()
 {
-	uart_init(115200);
-	delay_init(84);
-}
+  NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );		// 中断分组
+  delay_init(84);
 
+  // 初始化 shell 控制台
+  shell_hw_init(115200);
+  shell_init("shell >" ,usart_puts);          // 初始化 控制台输出
+  shell_input_init(&shell_1,usart_puts);      // 初始化 交互
+}
 
 int main(void)
 {
   hardware_init();
-
-  u32 t=0;
-
   while(1){
-    printf("t:%d\r\n",t);
-		delay_ms(500);
-		t++;
-
-	}
+    shell_hw_input();         // shell 控制台应用循环          
+  }
 }
