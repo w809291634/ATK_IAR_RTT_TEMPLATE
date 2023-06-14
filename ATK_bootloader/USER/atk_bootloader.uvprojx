@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -469,14 +469,14 @@
           <GroupName>SYSTEM</GroupName>
           <Files>
             <File>
-              <FileName>delay.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SYSTEM\delay\delay.c</FilePath>
-            </File>
-            <File>
               <FileName>sys.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SYSTEM\sys\sys.c</FilePath>
+            </File>
+            <File>
+              <FileName>systick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SYSTEM\systick\systick.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -503,6 +503,11 @@
               <FileType>1</FileType>
               <FilePath>..\SHELL\ustdio.c</FilePath>
             </File>
+            <File>
+              <FileName>user_cmd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SHELL\user_cmd.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -512,6 +517,11 @@
               <FileName>usart1.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\DRV\usart\usart1.c</FilePath>
+            </File>
+            <File>
+              <FileName>led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\DRV\LED\led.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -19,7 +19,7 @@
 // ´®¿Ú1DMA_RXÅäÖÃ
 #define USARTx_RX_DMA_STREAM     						DMA2_Stream5
 #define USARTx_RX_DMA_CHANNEL    						DMA_Channel_4
-#define USARTx_RINGBUF_SIZE                 20
+#define USARTx_RINGBUF_SIZE                 256
 
 /**************************user config*************************/
 

@@ -3,7 +3,7 @@
 
 static u8  fac_us=0;							//us延时倍乘数			   
 static u16 fac_ms=0;							//ms延时倍乘数,在os下,代表每个节拍的ms数
-		   
+
 //初始化延迟函数
 //当使用OS的时候,此函数会初始化OS的时钟节拍
 //SYSTICK的时钟固定为AHB时钟的1/8
@@ -11,7 +11,7 @@ static u16 fac_ms=0;							//ms延时倍乘数,在os下,代表每个节拍的ms数
 void delay_init(u8 SYSCLK)
 {
  	SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8); 
-	fac_us=SYSCLK/8;						//不论是否使用OS,fac_us都需要使用
+	fac_us=SYSCLK/8;						    //不论是否使用OS,fac_us都需要使用
 	fac_ms=(u16)fac_us*1000;				//非OS下,代表每个ms需要的systick时钟数   
 }								    
 
@@ -31,6 +31,7 @@ void delay_us(u32 nus)
 	SysTick->CTRL&=~SysTick_CTRL_ENABLE_Msk; //关闭计数器
 	SysTick->VAL =0X00;       				//清空计数器 
 }
+
 //延时nms
 //注意nms的范围
 //SysTick->LOAD为24位寄存器,所以,最大延时为:
@@ -50,6 +51,7 @@ void delay_xms(u16 nms)
 	SysTick->CTRL&=~SysTick_CTRL_ENABLE_Msk;       //关闭计数器
 	SysTick->VAL =0X00;     		  		//清空计数器	  	    
 } 
+
 //延时nms 
 //nms:0~65535
 void delay_ms(u16 nms)
