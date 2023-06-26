@@ -27,6 +27,5 @@ void led_app(void)
   if(tick_get()-last_ms>100){
     last_ms=tick_get();
     LED0=!LED0;
-    printk("test\r\n");
   }
 }

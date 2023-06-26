@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED;..\APP\esp32</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\SYSTEM\soft_timer;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED;..\APP\esp32</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -482,6 +482,11 @@
               <FileName>systick.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SYSTEM\systick\systick.c</FilePath>
+            </File>
+            <File>
+              <FileName>soft_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SYSTEM\soft_timer\soft_timer.c</FilePath>
             </File>
           </Files>
         </Group>

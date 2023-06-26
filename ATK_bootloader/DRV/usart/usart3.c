@@ -38,8 +38,9 @@ static void UART_Init(u32 bound)
   GPIO_InitTypeDef GPIO_InitStructure={0};
   USART_InitTypeDef USART_InitStructure={0};
 
-  RCC_AHB1PeriphClockCmd(USARTx_GPIO_RCC,ENABLE);    //使能GPIOA时钟
-  RCC_APB2PeriphClockCmd(USARTx_RCC,ENABLE);   //使能USART时钟
+  RCC_AHB1PeriphClockCmd(USARTx_GPIO_RCC,ENABLE);     //使能GPIO时钟
+  RCC_APB1PeriphClockCmd(USARTx_RCC,ENABLE);          //使能USART时钟
+//  RCC_APB2PeriphClockCmd(USARTx_RCC,ENABLE);          //使能USART时钟
 
   //串口1对应引脚复用映射
   GPIO_PinAFConfig(USARTx_TX_GPIO,USARTx_TX_PIN_NUM,USARTx_AF); //复用为USART

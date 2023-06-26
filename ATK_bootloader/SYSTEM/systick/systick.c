@@ -1,6 +1,6 @@
 #include "systick.h"
+#include "soft_timer.h"
 
-#define TICK_PER_SECOND 1000
 static uint32_t tick = 0;
 
 void systick_init(void)
@@ -13,6 +13,7 @@ void systick_init(void)
 void SysTick_Handler(void)
 {
   ++ tick;
+  tickCnt_Update();
 }
 
 uint32_t tick_get(void)
