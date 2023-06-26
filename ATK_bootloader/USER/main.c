@@ -1,8 +1,10 @@
 #include "stm32f4xx.h"
 #include "systick.h"
-#include "usart1.h"
-#include "led.h"
 #include "user_cmd.h"
+#include "usart1.h"
+#include "usart3.h"
+#include "led.h"
+#include "esp32_at.h"
 
 static void hardware_init()
 {
@@ -11,8 +13,11 @@ static void hardware_init()
   systick_init();                                     // 时钟初始化
   /* 初始化 shell 控制台 */
   shell_hw_init(115200);                              // 初始化 控制台串口硬件
-  shell_init("shell >" ,usart_puts);                  // 初始化 控制台输出
-  shell_input_init(&shell_1,usart_puts);              // 初始化 交互
+  shell_init("shell >" ,usart1_puts);                  // 初始化 控制台输出
+  shell_input_init(&shell_1,usart1_puts);              // 初始化 交互
+  
+  /* 初始化 ESP8266 WiFi at串口 */
+  esp32_at_hw_init(115200);                           // 初始化 ESP8266 WiFi at串口 
 }
 
 static void app_init()
@@ -25,7 +30,8 @@ int main(void)
   hardware_init();
   app_init();
   while(1){
-    led_app();                // led 指示灯
-    shell_hw_input();         // shell 控制台应用循环          
+    led_app();                  // led 指示灯
+    shell_app_cycle();          // shell 控制台应用循环 
+    esp32_at_app_cycle();       // esp32 的应用循环
   }
 }

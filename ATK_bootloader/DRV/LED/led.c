@@ -30,7 +30,3 @@ void led_app(void)
     printk("test\r\n");
   }
 }
-
-
-
-

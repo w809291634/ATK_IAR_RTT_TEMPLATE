@@ -8,6 +8,6 @@
 extern shellinput_t shell_1;
 
 void shell_hw_init(u32 bound);
-void usart_puts(const char * strbuf, unsigned short len);
-void shell_hw_input(void);
+void usart1_puts(const char * strbuf, unsigned short len);
+void shell_app_cycle(void);
 #endif

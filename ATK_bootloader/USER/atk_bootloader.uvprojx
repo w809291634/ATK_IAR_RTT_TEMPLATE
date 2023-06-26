@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED;..\APP\esp32</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -397,6 +397,11 @@
               <FileName>system_stm32f4xx.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\system_stm32f4xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>config.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\config.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -522,6 +527,21 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\DRV\LED\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\DRV\usart\usart3.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>APP</GroupName>
+          <Files>
+            <File>
+              <FileName>esp32_at.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\esp32\esp32_at.c</FilePath>
             </File>
           </Files>
         </Group>
