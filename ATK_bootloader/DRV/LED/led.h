@@ -7,5 +7,5 @@
 #define LED1 PFout(10)	// DS1	 
 
 void led_init(void);//≥ı ºªØ		 	
-void led_app(void);
+void led_app_init(void);
 #endif

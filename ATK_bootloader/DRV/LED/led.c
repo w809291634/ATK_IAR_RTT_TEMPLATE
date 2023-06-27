@@ -21,11 +21,14 @@ void led_init(void)
 }
 
 // 系统运行指示灯
-void led_app(void)
+void led_callback(void)
 {
-  static uint32_t last_ms=0;
-  if(tick_get()-last_ms>100){
-    last_ms=tick_get();
-    LED0=!LED0;
-  }
+  LED0=!LED0;
+}
+
+// 系统运行指示灯初始化
+void led_app_init(void)
+{
+  softTimer_create(LED_APP_TIMER_ID,MODE_PERIODIC,led_callback);
+  softTimer_start(LED_APP_TIMER_ID,200);
 }

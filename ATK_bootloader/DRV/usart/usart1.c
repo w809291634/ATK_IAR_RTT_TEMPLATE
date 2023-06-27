@@ -165,8 +165,23 @@ void usart1_puts(const char * strbuf, unsigned short len)
 void shell_app_cycle()
 {
   if(Receive_flag){
-    unsigned short data_len= UART_GetRemain();                        // 获取当前数据长度
-    shell_input(&shell_1, shell_ringbuf + Read_Index, data_len);
+    /* 取环形缓存区剩余数据 */
+    char temp[USARTx_RINGBUF_SIZE]={0};
+    unsigned short data_len= UART_GetRemain();          // 获取当前数据长度
+    if(Read_Index+data_len>USARTx_RINGBUF_SIZE){
+      // 索引处读取长度超出缓存
+      int len1=USARTx_RINGBUF_SIZE-Read_Index;          // 环形末尾读长度
+      int len2=data_len-len1;
+      memcpy(temp,shell_ringbuf + Read_Index,len1);
+      memcpy(temp+len1,shell_ringbuf,len2);
+    }else{
+      memcpy(temp,shell_ringbuf + Read_Index,data_len);
+    } 
+    
+    /* 接收并处理此处数据 */
+    shell_input(&shell_1, temp, data_len);
+    
+    /* 数据处理结束 */
     Read_Index = (Read_Index+data_len)% USARTx_RINGBUF_SIZE;          // 下次读取数据的起始位置，防止超出缓存区最大索引
     
     USARTx->CR1 &= ~USART_CR1_IDLEIE;             // 临界段保护

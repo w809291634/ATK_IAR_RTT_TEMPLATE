@@ -28,7 +28,8 @@ static void hardware_init()
 static void app_init()
 {
   register_user_cmd();
-  esp32_at_app_init();          
+  esp32_at_app_init();
+  led_app_init();  
 }
 
 // 主函数
@@ -38,7 +39,6 @@ int main(void)
   app_init();
   while(1){
     softTimer_Update();         // 软件定时器扫描
-    led_app();                  // led 指示灯
     shell_app_cycle();          // shell 控制台应用循环 
     esp32_at_app_cycle();       // esp32 的应用循环
   }

@@ -7,7 +7,8 @@
 /*****************************************************
 * 已使用定时器ID
 ******************************************************/
-#define ESP32_TIMEOUT_TIMER_ID   0
+#define ESP32_TIMEOUT_TIMER_ID    0
+#define LED_APP_TIMER_ID          1
 
 typedef void TIMER_CALLBACK(void);
  

@@ -122,7 +122,7 @@ static void UART_DMA_Init()
   // 配置中断
   USART_ITConfig(USARTx, USART_IT_IDLE, ENABLE);				// 开启空闲中断
   
-  NVIC_InitStructure.NVIC_IRQChannel = USARTx_IRQn;			  // 串口1中断通道
+  NVIC_InitStructure.NVIC_IRQChannel = USARTx_IRQn;			  // 串口中断通道
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=1; // 抢占优先级
   NVIC_InitStructure.NVIC_IRQChannelSubPriority =0;		    // 子优先级
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			    // IRQ通道使能
@@ -166,10 +166,26 @@ void usart3_puts(const char * strbuf, unsigned short len)
 void esp32_usart_data_handle()
 {
   if(Receive_flag){
-    unsigned short data_len= UART_GetRemain();                        // 获取当前数据长度
-    esp32_command_handle((const char*)(esp32_at_ringbuf + Read_Index), data_len); // 回调应用层的数据处理函数
-
-    // 数据处理结束
+    /* 取环形缓存区剩余数据 */
+    char temp[USARTx_RINGBUF_SIZE]={0};
+    unsigned short data_len= UART_GetRemain();          // 获取当前数据长度
+    if(Read_Index+data_len>USARTx_RINGBUF_SIZE){
+      // 索引处读取长度超出缓存
+      int len1=USARTx_RINGBUF_SIZE-Read_Index;          // 环形末尾读长度
+      int len2=data_len-len1;
+      memcpy(temp,esp32_at_ringbuf + Read_Index,len1);
+      memcpy(temp+len1,esp32_at_ringbuf,len2);
+    }else{
+      memcpy(temp,esp32_at_ringbuf + Read_Index,data_len);
+    }
+      
+    /* 接收并处理此处数据 */
+    int ret=esp32_command_handle(temp,data_len);        // 回调应用层的数据处理函数
+    if(ret==-1){
+      debug_err(ERR"Read_Index:%d usart3_data:%s\r\n",Read_Index,temp);
+    }
+    
+    /* 数据处理结束 */
     Read_Index = (Read_Index+data_len)% USARTx_RINGBUF_SIZE;          // 下次读取数据的起始位置，防止超出缓存区最大索引
     
     USARTx->CR1 &= ~USART_CR1_IDLEIE;                                 // 临界段保护
