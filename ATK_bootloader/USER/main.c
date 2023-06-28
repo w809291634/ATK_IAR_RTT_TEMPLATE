@@ -28,6 +28,8 @@ static void hardware_init()
 static void app_init()
 {
   register_user_cmd();
+  welcome_gets(&shell_1,0,0);             // Ö÷¶¯ÏÔÊ¾ welcome
+  
   esp32_at_app_init();
   led_app_init();  
 }

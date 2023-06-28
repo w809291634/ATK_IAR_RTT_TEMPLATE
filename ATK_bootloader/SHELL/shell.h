@@ -257,4 +257,5 @@ void shell_input_init(struct shell_input * shellin , fmt_puts_t shellputs,...);
   * @return   void
 */
 void shell_confirm(struct shell_input * shellin ,char * info ,cmd_fn_t yestodo) ;
+void welcome_gets(struct shell_input * shellin,char * recv,int len);
 #endif

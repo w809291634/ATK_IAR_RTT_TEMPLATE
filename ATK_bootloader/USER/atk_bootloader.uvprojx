@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER,USE_FULL_ASSERT</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\SYSTEM\soft_timer;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED;..\APP\esp32</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\SYSTEM\soft_timer;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED;..\APP\esp32;..\DRV\flash</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -424,29 +424,14 @@
               <FilePath>..\FWLIB\src\misc.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f4xx_dma2d.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\FWLIB\src\stm32f4xx_dma2d.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f4xx_dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FWLIB\src\stm32f4xx_dma.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f4xx_exti.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\FWLIB\src\stm32f4xx_exti.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f4xx_gpio.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FWLIB\src\stm32f4xx_gpio.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_iwdg.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\FWLIB\src\stm32f4xx_iwdg.c</FilePath>
             </File>
             <File>
               <FileName>stm32f4xx_rcc.c</FileName>
@@ -464,9 +449,9 @@
               <FilePath>..\FWLIB\src\stm32f4xx_usart.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f4xx_wwdg.c</FileName>
+              <FileName>stm32f4xx_flash.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\FWLIB\src\stm32f4xx_wwdg.c</FilePath>
+              <FilePath>..\FWLIB\src\stm32f4xx_flash.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -537,6 +522,11 @@
               <FileName>usart3.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\DRV\usart\usart3.c</FilePath>
+            </File>
+            <File>
+              <FileName>flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\DRV\flash\flash.c</FilePath>
             </File>
           </Files>
         </Group>

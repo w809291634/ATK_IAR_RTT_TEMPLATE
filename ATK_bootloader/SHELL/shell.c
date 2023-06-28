@@ -900,6 +900,7 @@ void shell_input_init(struct shell_input * shellin , fmt_puts_t shellputs,...)
 	shellin->edit = 0;
 	shellin->puts = shellputs;
 	shellin->gets = shellgets;
+  shellin->gets = cmdline_gets;
 	shellin->htywrt  = 0;
 	shellin->htyread = 0;
 	shellin->apparg  = NULL;

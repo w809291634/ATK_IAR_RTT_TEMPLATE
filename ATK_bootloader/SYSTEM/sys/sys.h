@@ -7,7 +7,7 @@
 
 // 0xff 显示所有层的信息
 // 0x00 所有层的信息都不显示
-#define DEBUG           0x12        // 0x01-显示 debug 信息 
+#define DEBUG           0x1E        // 0x01-显示 debug 信息 
                                     // 0x02-显示 error 信息 
                                     // 0x04-显示 warning 信息 
                                     // 0x08-显示 info 信息 

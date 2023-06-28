@@ -7,7 +7,7 @@
 * softTimer_Init 放置在硬件初始化
 ******************************************************/
 /* 软件定时器数量 */
-#define TIMER_NUM           5
+#define TIMER_NUM           10
 
 static volatile uint32_t tickCnt = 0;   //软件定时器时钟节拍
 static softTimer timer[TIMER_NUM];      //软件定时器数组

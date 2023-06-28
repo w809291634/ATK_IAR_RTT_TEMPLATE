@@ -30,5 +30,5 @@ void led_callback(void)
 void led_app_init(void)
 {
   softTimer_create(LED_APP_TIMER_ID,MODE_PERIODIC,led_callback);
-  softTimer_start(LED_APP_TIMER_ID,200);
+  softTimer_start(LED_APP_TIMER_ID,100);
 }

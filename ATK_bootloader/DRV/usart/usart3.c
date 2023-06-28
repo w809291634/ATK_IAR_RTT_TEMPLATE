@@ -28,7 +28,6 @@
 static char esp32_at_ringbuf[USARTx_RINGBUF_SIZE]={0};
 static unsigned short Read_Index;
 static unsigned short Write_Index;
-static volatile char Receive_flag;              // 串口空闲中断接收标志，shell开始进行数据处理
 
 //初始化IO 串口1 
 //bound:波特率
@@ -165,7 +164,7 @@ void usart3_puts(const char * strbuf, unsigned short len)
 // esp32 应用程序获取输入数据
 void esp32_usart_data_handle()
 {
-  if(Receive_flag){
+  if(Write_Index!=Read_Index){
     /* 取环形缓存区剩余数据 */
     char temp[USARTx_RINGBUF_SIZE]={0};
     unsigned short data_len= UART_GetRemain();          // 获取当前数据长度
@@ -187,14 +186,10 @@ void esp32_usart_data_handle()
     
     /* 数据处理结束 */
     Read_Index = (Read_Index+data_len)% USARTx_RINGBUF_SIZE;          // 下次读取数据的起始位置，防止超出缓存区最大索引
-    
-    USARTx->CR1 &= ~USART_CR1_IDLEIE;                                 // 临界段保护
-    Receive_flag=0;
-    USARTx->CR1 |= USART_CR1_IDLEIE;
   }
 }
 
-//串口1中断服务程序
+//串口3中断服务程序
 void USART3_IRQHandler(void)
 {
   if(USART_GetITStatus( USARTx, USART_IT_IDLE ) == SET )
@@ -202,6 +197,5 @@ void USART3_IRQHandler(void)
     USART_ReceiveData(USARTx);//清除IDLE中断标志位 
     // 更新当前串口接收的缓存末端
     Write_Index = (USARTx_RINGBUF_SIZE-DMA_GetCurrDataCounter(USARTx_RX_DMA_STREAM)) % USARTx_RINGBUF_SIZE;
-    Receive_flag=1; 
   }	
 } 
