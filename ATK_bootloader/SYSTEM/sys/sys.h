@@ -4,48 +4,7 @@
 #include "ustdio.h"
 #include "soft_timer.h"
 #include "string.h"
-
-// 0xff 显示所有层的信息
-// 0x00 所有层的信息都不显示
-#define DEBUG           0x1E        // 0x01-显示 debug 信息 
-                                    // 0x02-显示 error 信息 
-                                    // 0x04-显示 warning 信息 
-                                    // 0x08-显示 info 信息 
-                                    // 0x10-显示 at 信息
-#define ERR "ERROR:"
-#define WARNING "WARNING:"
-#define INFO "INFORMATION:"
-
-#if (DEBUG & 0x01)
-#define debug printk
-#else
-#define debug(...)
-#endif
-
-#if (DEBUG & 0x02)
-#define debug_err printk
-#else
-#define debug_err(...)
-#endif
-
-#if (DEBUG & 0x04)
-#define debug_war printk
-#else
-#define debug_war(...)
-#endif
-
-#if (DEBUG & 0x08)
-#define debug_info printk
-#else
-#define debug_info(...)
-#endif
-
-#if (DEBUG & 0x10)
-#define debug_at printk
-#else
-#define debug_at(...)
-#endif
-
+#include "config.h"
 
 //位带操作,实现51类似的GPIO控制功能
 //具体实现思想,参考<<CM3权威指南>>第五章(87页~92页).M4同M3类似,只是寄存器地址变了.

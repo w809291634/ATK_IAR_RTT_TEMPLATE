@@ -39,7 +39,7 @@
 #define USE_AVL_TREE            0
 
 /// 命令带上参数的字符串输入最长记录长度
-#define COMMANDLINE_MAX_LEN     36
+#define COMMANDLINE_MAX_LEN     50
 
 /// 控制台记录条目数，设为 0 时不记录
 #define COMMANDLINE_MAX_RECORD  4

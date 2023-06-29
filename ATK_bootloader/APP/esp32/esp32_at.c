@@ -5,6 +5,8 @@
 #include "string.h"
 #include "systick.h"
 #include "soft_timer.h"
+#include "config.h"
+#include "user_cmd.h"
 
 #define PASS                        "\"Xiaomi_B596\",\"WH15572388670LOL\""
 #define RECV_CMD_BUF_SIZE           256
@@ -20,7 +22,7 @@ static short esp32_flag;           // esp32的标志位
                                    // 位2 备用
                                    // 位3 0：当前命令正在处理 1：处理结束  
                                    // 位4 备用
-static const char* cmd_list[]={"ATE0\r\n","AT+CWMODE","AT+CWJAP",};
+static const char* cmd_list[]={"ATE0\r\n","AT+CWSTATE?\r\n","AT+CWMODE","AT+CWJAP",};
 static const char* ReplyOk_cmd_list[]={"ATE0","AT+CWMODE",};
 static char current_cmd[100]={0};
 
@@ -65,17 +67,23 @@ static void esp32_connect_ap_handle(void)
     }break;
     case 1:{
       send_cmd_count=send_cmd_count%ARRAY_SIZE(cmd_list);
-      sprintf(current_cmd,"%s=1\r\n",(char*)cmd_list[send_cmd_count]);
+      strcpy(current_cmd,(char*)cmd_list[send_cmd_count]);
       esp32_send_cmd(current_cmd,strlen(current_cmd));
       softTimer_start(ESP32_TIMEOUT_TIMER_ID,1000);
     }break;
     case 2:{
       send_cmd_count=send_cmd_count%ARRAY_SIZE(cmd_list);
+      sprintf(current_cmd,"%s=1\r\n",(char*)cmd_list[send_cmd_count]);
+      esp32_send_cmd(current_cmd,strlen(current_cmd));
+      softTimer_start(ESP32_TIMEOUT_TIMER_ID,1000);
+    }break;
+    case 3:{
+      send_cmd_count=send_cmd_count%ARRAY_SIZE(cmd_list);
       sprintf(current_cmd,"%s=%s\r\n",(char*)cmd_list[send_cmd_count],PASS);
       esp32_send_cmd(current_cmd,strlen(current_cmd));
       softTimer_start(ESP32_TIMEOUT_TIMER_ID,16000);    // 默认连接超时为15s
     }break;
-    case 3:{
+    case 4:{
       esp32_cmd_handle_reset();
       debug_info(INFO"CONNECT AP SUCCESS!\r\n");
     }
@@ -205,6 +213,16 @@ int esp32_command_handle(const char* buf,unsigned short len)
       // 显示
       debug_at(ESP32_RES"%s\r\n",valid_reply);
     }
+    // 处理 ATE0
+    else if(strstr(valid_reply, "ATE0")){  
+      // 显示
+      debug_at(ESP32_RES"%s\r\n",valid_reply);
+    }
+    // 处理 ready
+    else if(strstr(valid_reply, "ready")){  
+      // 显示
+      debug_at(ESP32_RES"%s\r\n",valid_reply);
+    }
     // 当前回复没有处理
     else{
       debug_err(ERR"valid_reply:%s not processed\r\n",valid_reply);
@@ -242,6 +260,11 @@ void esp32_at_app_cycle(void)
 // esp32 开始连接 ap
 void esp32_connect_ap_start(void)
 {
+  if(sys_parameter.flag!=SYS_PARAMETER_OK){
+    debug_info(INFO"Please use %s cmd set wifi parameter!\r\n",ESP_SET_SSID_PASS_CMD);
+    return;
+  }
+  
   if(!(esp32_flag & BIT_0)){
     esp32_cmd_handle_reset();
     esp32_flag|=BIT_0;

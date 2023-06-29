@@ -2,10 +2,10 @@
 #define _FLASH_H_
 #include "sys.h"
 
-//FLASH起始地址
-#define STM32_FLASH_BASE        0x08000000 	//STM32 FLASH的起始地址
+// FLASH起始地址
+#define STM32_FLASH_BASE        0x08000000 	        //STM32 FLASH的起始地址
  
-//FLASH 扇区的起始地址
+// FLASH 扇区的起始地址
 #define ADDR_FLASH_SECTOR_0     ((u32)0x08000000) 	//扇区0起始地址, 16 Kbytes  
 #define ADDR_FLASH_SECTOR_1     ((u32)0x08004000) 	//扇区1起始地址, 16 Kbytes  
 #define ADDR_FLASH_SECTOR_2     ((u32)0x08008000) 	//扇区2起始地址, 16 Kbytes  
@@ -18,14 +18,9 @@
 #define ADDR_FLASH_SECTOR_9     ((u32)0x080A0000) 	//扇区9起始地址, 128 Kbytes  
 #define ADDR_FLASH_SECTOR_10    ((u32)0x080C0000) 	//扇区10起始地址,128 Kbytes  
 #define ADDR_FLASH_SECTOR_11    ((u32)0x080E0000) 	//扇区11起始地址,128 Kbytes  
+#define ADDR_FLASH_SYSTEM_MEM   ((u32)0X1FFF0000) 	//STM32F4 系统存储器的起始地址 30 Kbytes
 
-#define FLASH_PAGE_SIZE             ((uint16_t)0x400)        //页大小   - 1K
-#define FLASH_TYPE_LENGTH           ((uint16_t)0x002)        //类型大小 - 2字节
-#define FLASH_PAGE_LENGTH           (FLASH_PAGE_SIZE/FLASH_TYPE_LENGTH)
-#define FLAG_OK                     0x00
-#define FLAG_NOOK                   0x01
-
-
-
-
+u32 STMFLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite);
+void STMFLASH_Read(u32 ReadAddr,u32 *pBuffer,u32 NumToRead);
+void STMFLASH_Read_Write_test(u32 start_add,u32 end_add);
 #endif //_FLASH_H_
