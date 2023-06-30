@@ -12,7 +12,7 @@ static u32 STMFLASH_ReadWord(u32 faddr)
 //获取某个地址所在的flash扇区
 //addr: flash地址
 //返回值:0~11,即addr所在的扇区
-static uint16_t STMFLASH_GetFlashSector(u32 addr)
+uint16_t STMFLASH_GetFlashSector(u32 addr)
 {
 	if(addr<ADDR_FLASH_SECTOR_1)return FLASH_Sector_0;
 	else if(addr<ADDR_FLASH_SECTOR_2)return FLASH_Sector_1;
@@ -122,10 +122,10 @@ void STMFLASH_Read_Write_test(u32 start_add,u32 end_add)
   char datatemp[TEXT_LENTH+1]={0};
 //  u32 end_add=start_add+NumToWrite*SIZE*4;
   while(start_add < end_add && count==0){
-    STMFLASH_Write(start_add,(u32*)TEXT_Buffer,SIZE);
+    int write_len=STMFLASH_Write(start_add,(u32*)TEXT_Buffer,SIZE);
     STMFLASH_Read(start_add,(u32*)datatemp,SIZE);
     if(memcmp(datatemp,TEXT_Buffer,TEXT_LENTH)==0){
-      debug_info(INFO"STMFLASH_Read Success,start_add:0x%08x str:%s\r\n",start_add,datatemp);
+      debug_info(INFO"STMFLASH_Read Success,start_add:0x%08x writelen:%d str:%s\r\n",start_add,write_len,datatemp);
     }
     else{
       debug_err(ERR"STMFLASH_Read_Write_test error!\r\n");

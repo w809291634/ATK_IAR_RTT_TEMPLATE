@@ -8,10 +8,11 @@
 #include "soft_timer.h"
 #include "config.h"
 #include "flash.h"
+#include "download.h"
 
 // 系统参数保存区域
 sys_parameter_t sys_parameter;
-
+// 获取参数
 static void get_system_parameter()
 {
   SYS_PARAMETER_READ;
@@ -67,8 +68,11 @@ int main(void)
   app_init();
   while(1){
     softTimer_Update();         // 软件定时器扫描
-    shell_app_cycle();          // shell 控制台应用循环 
     esp32_at_app_cycle();       // esp32 的应用循环
-
+    if(usart1_mode==0)
+      shell_app_cycle();          // shell 控制台应用循环 
+    else{
+      IAP_download_cycle();
+    }
   }
 }

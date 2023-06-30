@@ -30,6 +30,8 @@ static unsigned short Read_Index;
 static unsigned short Write_Index;
 static volatile unsigned char Receive_flag;      // 串口空闲中断接收标志，shell开始进行数据处理
 
+char usart1_mode=0;             // 串口的数据流 工作指向  0：数据到达shell控制台  1：数据到达IAP更新
+
 //初始化IO 串口1 
 //bound:波特率
 static void UART_Init(u32 bound)
@@ -148,6 +150,21 @@ void shell_hw_init(u32 bound)
   UART_DMA_Init();
 }
 
+// 清空数据 
+void usart1_flush(void)
+{
+  Read_Index=Write_Index;
+}
+
+// 串口1的发送函数
+// 发送字符
+void usart1_put(const char data)
+{
+  USART_ClearFlag(USARTx, USART_FLAG_TC);
+  USARTx->DR = data;
+  while (USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET);
+}
+
 // 串口1的发送函数
 // 发送字符串
 void usart1_puts(const char * strbuf, unsigned short len)
@@ -159,6 +176,17 @@ void usart1_puts(const char * strbuf, unsigned short len)
     while (USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET);
     strbuf++ ;
   }
+}
+
+// 从缓存区读取一个字节
+// 注意：数据处理结果和shell_app_cycle只能选择其一
+int usart1_getchar(uint8_t* data)
+{
+  if(Write_Index!=Read_Index){
+    *data=shell_ringbuf[Read_Index];
+    Read_Index = (Read_Index+1)% USARTx_RINGBUF_SIZE;   // 读取索引加1
+    return 1;
+  }else return 0;
 }
 
 // shell控制台获取输入数据

@@ -8,10 +8,10 @@
 #include "config.h"
 #include "user_cmd.h"
 
-#define PASS                        "\"Xiaomi_B596\",\"WH15572388670LOL\""
 #define RECV_CMD_BUF_SIZE           256
 #define ESP32_RES                   "ESP32-->"
 #define ESP32_SEND                  "ESP32<--"
+#define TARGET                      "ESP32"
 #define CMD_OK                      {esp32_flag |= BIT_3;}
 #define CMD_SENDED                  {esp32_flag &= ~BIT_3;}
 static char recv_cmd_buf[RECV_CMD_BUF_SIZE];
@@ -60,26 +60,31 @@ static void esp32_connect_ap_handle(void)
   memset(current_cmd,0,strlen(current_cmd));
   switch(send_cmd_count){
     case 0:{
+      /* ATE0 */
       send_cmd_count=send_cmd_count%ARRAY_SIZE(cmd_list);
       strcpy(current_cmd,(char*)cmd_list[send_cmd_count]);
       esp32_send_cmd(current_cmd,strlen(current_cmd));
       softTimer_start(ESP32_TIMEOUT_TIMER_ID,1000);
     }break;
     case 1:{
+      /* AT+CWSTATE? 查询当前有没有连接wifi */
       send_cmd_count=send_cmd_count%ARRAY_SIZE(cmd_list);
       strcpy(current_cmd,(char*)cmd_list[send_cmd_count]);
       esp32_send_cmd(current_cmd,strlen(current_cmd));
       softTimer_start(ESP32_TIMEOUT_TIMER_ID,1000);
     }break;
     case 2:{
+      /* AT+CWMODE=1 */
       send_cmd_count=send_cmd_count%ARRAY_SIZE(cmd_list);
       sprintf(current_cmd,"%s=1\r\n",(char*)cmd_list[send_cmd_count]);
       esp32_send_cmd(current_cmd,strlen(current_cmd));
       softTimer_start(ESP32_TIMEOUT_TIMER_ID,1000);
     }break;
     case 3:{
+      /* AT+CWJAP */
       send_cmd_count=send_cmd_count%ARRAY_SIZE(cmd_list);
-      sprintf(current_cmd,"%s=%s\r\n",(char*)cmd_list[send_cmd_count],PASS);
+      sprintf(current_cmd,"%s=\"%s\",\"%s\"\r\n",(char*)cmd_list[send_cmd_count],
+              sys_parameter.wifi_ssid,sys_parameter.wifi_pwd);
       esp32_send_cmd(current_cmd,strlen(current_cmd));
       softTimer_start(ESP32_TIMEOUT_TIMER_ID,16000);    // 默认连接超时为15s
     }break;
@@ -89,7 +94,8 @@ static void esp32_connect_ap_handle(void)
     }
     return;
     default:{
-      softTimer_start(ESP32_TIMEOUT_TIMER_ID,1000);
+      esp32_cmd_handle_reset();
+      debug_err(ERR"instruction exceeeded!\r\n");
     }break;
   }
   CMD_SENDED;
@@ -170,6 +176,7 @@ int esp32_command_handle(const char* buf,unsigned short len)
     // 显示错误
     else if(strstr(valid_reply, "ERROR")){   
       debug_at(ESP32_RES"%s\r\n",valid_reply);
+      esp32_cmd_handle_reset();
     }
     // 处理 AT+CWJAP 连接AP的错误情况
     else if(strstr(valid_reply, "+CWJAP:")){   
@@ -218,6 +225,39 @@ int esp32_command_handle(const char* buf,unsigned short len)
       // 显示
       debug_at(ESP32_RES"%s\r\n",valid_reply);
     }
+    // 处理 AT+CWSTATE?
+    else if(strstr(valid_reply, "+CWSTATE:")){  
+      // 显示
+      debug_at(ESP32_RES"%s\r\n",valid_reply);
+      // 处理回复，类似 +CWSTATE:2,"Xiaomi_B596"
+      char* _flag="+CWSTATE:";
+      char* reply = valid_reply+strlen(_flag);
+      // 拆分信息
+      int state=0;
+      char ssid[50]={0};
+      char *token = strtok(reply, ",");
+      unsigned char k = 0;
+      while(token != NULL)
+      {
+        k++;
+        switch(k)
+        {
+          case 1: {
+            state = atoi(token);
+          }break;
+          case 2: {
+            strcpy(ssid,token);
+          }break;
+        }
+        token = strtok(NULL, ",");
+      }
+      // 处理信息
+      if(state==2 && strstr(ssid,sys_parameter.wifi_ssid)){
+        send_cmd_count=4;           // 跳过连接步骤
+        debug_info(INFO"%s connected to the wifi:%s\r\n",TARGET,ssid);
+      }
+      CMD_OK;
+    }
     // 处理 ready
     else if(strstr(valid_reply, "ready")){  
       // 显示
@@ -260,11 +300,12 @@ void esp32_at_app_cycle(void)
 // esp32 开始连接 ap
 void esp32_connect_ap_start(void)
 {
+  // 首次使用请设置 wifi 连接参数
   if(sys_parameter.flag!=SYS_PARAMETER_OK){
     debug_info(INFO"Please use %s cmd set wifi parameter!\r\n",ESP_SET_SSID_PASS_CMD);
     return;
   }
-  
+  // 进行ap连接
   if(!(esp32_flag & BIT_0)){
     esp32_cmd_handle_reset();
     esp32_flag|=BIT_0;

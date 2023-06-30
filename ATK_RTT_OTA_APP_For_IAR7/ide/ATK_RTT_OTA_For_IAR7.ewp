@@ -606,7 +606,7 @@
         <option>
           <name>OOCOutputFormat</name>
           <version>2</version>
-          <state>1</state>
+          <state>2</state>
         </option>
         <option>
           <name>OCOutputOverride</name>
@@ -614,7 +614,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>atk_rtt_template.hex</state>
+          <state>ATK_RTT_OTA_For_IAR7.bin</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>

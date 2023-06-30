@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER,USE_FULL_ASSERT</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\SYSTEM\soft_timer;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED;..\APP\esp32;..\DRV\flash</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\SYSTEM\soft_timer;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED;..\APP\esp32;..\DRV\flash;..\..\ATK_CONFIG;..\IAP</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -401,7 +401,7 @@
             <File>
               <FileName>config.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\config.h</FilePath>
+              <FilePath>..\..\ATK_CONFIG\config.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -537,6 +537,21 @@
               <FileName>esp32_at.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\esp32\esp32_at.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>IAP</GroupName>
+          <Files>
+            <File>
+              <FileName>download.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\IAP\download.c</FilePath>
+            </File>
+            <File>
+              <FileName>ymodem.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\IAP\ymodem.c</FilePath>
             </File>
           </Files>
         </Group>
