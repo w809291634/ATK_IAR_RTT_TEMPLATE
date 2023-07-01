@@ -183,13 +183,13 @@
 
 /* Board extended module Drivers */
 
-/* 用户配置 */
-// RTT系统使用 cmbacktrace
-#define RT_USING_CMBACKTRACE              // 使用 CMBACKTRACE 进行故障诊断
-// RTT系统的 heap 设置
-#define RT_HEAP_USING_CCMRAM              // 使用 CCMRAM 作为RTT系统的HEAP
+/* �û����� */
+// RTT cmbacktrace
+#define RT_USING_CMBACKTRACE              // ʹ��CMBACKTRACE���
+// RTT heap ʹ��CCM
+#define RT_HEAP_USING_CCMRAM              // ʹ��CCM ram ��heap
 #ifdef RT_HEAP_USING_CCMRAM
-#define RT_CCMRAM_AUTO_ALLOC              // CCMRAM 自动分配剩余内存
+#define RT_CCMRAM_AUTO_ALLOC              // CCMRAM �Զ������ڴ浽RTTϵͳ
 #endif
 
 

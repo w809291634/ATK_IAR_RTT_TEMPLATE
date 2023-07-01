@@ -35,12 +35,6 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 uint8_t file_name[FILE_NAME_LENGTH];
-uint32_t FlashDestination = ApplicationAddress;      /* Flash user program offset */
-uint32_t EraseCounter = 0x0;
-uint32_t NbrOfPage = 0;
-FLASH_Status FLASHStatus = FLASH_COMPLETE;
-uint32_t RamSource;
-extern uint8_t tab_1024[1024];
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -254,6 +248,10 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
   {
     return -1;
   }
+  /* It seems odd that the CRC doesn't cover the three preamble bytes. */
+  if((Cal_CRC16((unsigned char *)(data + PACKET_HEADER), packet_size + PACKET_TRAILER)&0xFFFF) != 0)	{
+    return -1;	//crc校验出错
+  }
   // 数据包长度
   *length = packet_size;
   return 0;
@@ -261,22 +259,30 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
 
 /**
   * @brief  Receive a file using the ymodem protocol
-  * @param  buf: Address of the first byte
+  * @param  buf: Address of the first byte 存放数据的buf
+  * @param  Destination: 烧写起始地址
+  * @param  partition_size: 分区大小
+  * @param  timeout: 超时
   * @retval The size of the file
   */
-int32_t Ymodem_Receive (uint8_t *buf)
+static uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
+int32_t Ymodem_Receive (uint8_t *buf,uint32_t partition_start ,uint32_t partition_size,uint32_t timeout)
 {
-  uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD], file_size[FILE_SIZE_LENGTH], *file_ptr, *buf_ptr;
+  uint32_t RamSource;
+//  uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
+  uint8_t file_size[FILE_SIZE_LENGTH], *file_ptr;
   int32_t i, j, packet_length, session_done, file_done, packets_received, errors, session_begin, size = 0;
 
   /* 初始化写flash的地址 */
-  FlashDestination = ApplicationAddress;
+  uint32_t FlashDestination = partition_start; 
+  uint32_t partition_end = FlashDestination+partition_size;  // 加1
 
   for (session_done = 0, errors = 0, session_begin = 0; ;)
   {
-    for (packets_received = 0, file_done = 0, buf_ptr = buf; ;)
+    /* 开始接收数据包,阻塞访问 */
+    for (packets_received = 0, file_done = 0; ;)
     {
-      /* 开始接收数据包,阻塞访问 */
+      /* 开始接收数据包 */
       switch (Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT))
       {
         /* 正常处理数据包 */
@@ -321,13 +327,13 @@ int32_t Ymodem_Receive (uint8_t *buf)
                     file_size[i++] = '\0';
                     Str2Int(file_size, &size);
 
-                    /* flash 写入地址检查 擦除flash */
-                    u32 addrx=FlashDestination;           // 获取当前要写入的地址
-                    u32 end_addr=FlashDestination+size;
+                    /* 检查地址 */
+                    u32 addrx=partition_start;           // 写入起始地址
+                    u32 end_addr=partition_start+size;   // 接收文件的写入终止地址，加1
                     
-                    if (size > (STM32_FLASH_SIZE - 1) || addrx < STM32_FLASH_BASE ||
-                        addrx >= STM32_FLASH_END ||       // 起始地址检查
-                        end_addr >= STM32_FLASH_END ||    // 终止地址检查
+                    if (size > partition_size  || 
+                        addrx < STM32_FLASH_BASE ||       // 起始地址检查
+                        end_addr > partition_end ||       // 终止地址检查
                         addrx % 4 )
                     {
                       /* End session */
@@ -336,23 +342,24 @@ int32_t Ymodem_Receive (uint8_t *buf)
                       return -1;
                     }
 
-                    // 擦除需要的flash部分 F1和F4代码不同 
+                    /* 擦除需要的flash部分 */
                     FLASH_Unlock();
                     FLASH_DataCacheCmd(DISABLE);
                     
-                    // 先擦除所在的扇区 FLASH 
                     while(addrx < end_addr)	
                     {
                       if(*(vu32*)addrx!=0XFFFFFFFF)           // 有非0XFFFFFFFF的地方,要擦除这个扇区,同时进行校验
                       {   
                         uint16_t Sector_num = STMFLASH_GetFlashSector(addrx);
                         if(FLASH_EraseSector(Sector_num,VoltageRange_3)!=FLASH_COMPLETE){   //VCC=2.7~3.6V之间!!
+                          FLASH_DataCacheCmd(ENABLE);	
+                          FLASH_Lock();
                           /* End session */
                           Send_Byte(CA);
                           Send_Byte(CA);
                           return -2;
                         }
-                      }else addrx+=4;                         // 当前可写终止地址
+                      }else addrx+=4;
                     } 
                     FLASH_DataCacheCmd(ENABLE);	              // FLASH擦除结束,开启数据缓存
                     FLASH_Lock();                             // 上锁
@@ -372,17 +379,20 @@ int32_t Ymodem_Receive (uint8_t *buf)
                 /* 获取其他数据包并烧写 */
                 else
                 {
-                  memcpy(buf_ptr, packet_data + PACKET_HEADER, packet_length);
+                  memcpy(buf, packet_data + PACKET_HEADER, packet_length);
                   RamSource = (uint32_t)buf;
                   
-                  FLASH_Unlock();									          // 解锁 
-                  FLASH_DataCacheCmd(DISABLE);              // FLASH擦除期间,必须禁止数据缓存 
-                  for (j = 0;(j < packet_length) && (FlashDestination <  ApplicationAddress + size);j += 4)
+                  /* 数据编程 */
+                  FLASH_Unlock();	
+                  FLASH_DataCacheCmd(DISABLE); 
+                  for (j = 0;(j < packet_length) && (FlashDestination <  partition_start + size);j += 4)
                   {
                     FLASH_ProgramWord(FlashDestination, *(uint32_t*)RamSource);
 
                     if (*(uint32_t*)FlashDestination != *(uint32_t*)RamSource)
                     {
+                      FLASH_DataCacheCmd(ENABLE);	
+                      FLASH_Lock();
                       /* End session */
                       Send_Byte(CA);
                       Send_Byte(CA);
@@ -391,8 +401,8 @@ int32_t Ymodem_Receive (uint8_t *buf)
                     FlashDestination += 4;
                     RamSource += 4;
                   }
-                  FLASH_DataCacheCmd(ENABLE);	              // FLASH擦除结束,开启数据缓存
-                  FLASH_Lock();                             // 上锁
+                  FLASH_DataCacheCmd(ENABLE);	
+                  FLASH_Lock();
                   
                   Send_Byte(ACK);
                 }
@@ -406,23 +416,17 @@ int32_t Ymodem_Receive (uint8_t *buf)
           Send_Byte(CA);
           Send_Byte(CA);
           return -30;
-        /* 等待 */
+        /* 其他处理 */
         default:
           if (session_begin > 0) errors ++;
           
           if (errors > MAX_ERRORS)
           {
-            Send_Byte(CA);
+            Send_Byte(CA);      // 请求结束传输
             Send_Byte(CA);
             return -10;
           }
-          Send_Byte(CRC16);
-          
-          /* 显示倒计时 */
-          if(session_begin==0){
-            printk("\033[2J\033[%d;%dH%s",0,0,shell_1.sign);
-            printk("1\r\n");
-          }
+          Send_Byte(CRC16);     // 发送字符'C'
           break;
       }
       if (file_done != 0) break;

@@ -29,19 +29,19 @@ void SystemClock_Config(void);
 #endif
 
 #define DMA_NOT_AVAILABLE ((DMA_INSTANCE_TYPE *)0xFFFFFFFFU)
-#define CCMRAM __attribute__((section(".sram")))         // å®šä¹‰åˆ†é…åˆ° CCM RAMçš„ç©ºé—´
+#define CCMRAM __attribute__((section(".sram")))         // Ê¹ÓÃCCM£¬IAR8Ö§³Ö
 
 #define STM32_FLASH_START_ADRESS     ((uint32_t)0x08000000)
 #define STM32_FLASH_SIZE             (1024 * 1024)
 #define STM32_FLASH_END_ADDRESS      ((uint32_t)(STM32_FLASH_START_ADRESS + STM32_FLASH_SIZE))
 
-// ç”±äº CSTACK æ®µåˆ†é…åˆ°CCMï¼Œè¿™é‡Œä¸çŸ¥é“ç»ˆæ­¢åœ°å€
+// ÓÉÓÚ CSTACK ·ÖÅäÔ­Òò£¬ÕâÀïSRAM1²»Ö§³Ö×Ô¶¯·ÖÅä
 //#define STM32_SRAM1_SIZE            (128)
 //#define STM32_SRAM1_END             (0x20000000 + STM32_SRAM1_SIZE * 1024)
 //#define STM32_SRAM_SIZE             STM32_SRAM1_SIZE
 //#define STM32_SRAM_END              STM32_SRAM1_END
 
-// CCM RAM è‡ªåŠ¨åˆ†é…å‰©ä½™ç©ºé—´
+// CCM RAM Ê¹ÓÃ×Ô¶¯·ÖÅäÊ£ÓàÄÚ´æ
 #ifdef RT_CCMRAM_AUTO_ALLOC
 #define STM32_SRAM2_CCM_SIZE        (64)
 #define STM32_SRAM2_CCM_END         (0x10000000 + STM32_SRAM2_CCM_SIZE * 1024)
@@ -52,7 +52,7 @@ void SystemClock_Config(void);
 extern int Image$$RW_IRAM1$$ZI$$Limit;
 #define HEAP_BEGIN      ((void *)&Image$$RW_IRAM1$$ZI$$Limit)
 #elif __ICCARM__
-// iarä½¿ç”¨éƒ¨åˆ†
+// iarÊ¹ÓÃ
 #pragma section="CSTACK"
 #define HEAP_BEGIN      (__segment_end("CSTACK"))
 #else

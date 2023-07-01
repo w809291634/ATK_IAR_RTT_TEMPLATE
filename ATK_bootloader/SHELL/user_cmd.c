@@ -3,6 +3,8 @@
 #include "esp32_at.h"
 #include "config.h"
 #include "usart1.h"
+#include "download.h"
+#include "stdlib.h"
 
 void SoftReset(void* arg)
 { 
@@ -20,7 +22,7 @@ void connect_ap(void* arg)
 // 设置 ESP 的 wifi名称 和 密码
 void esp_set_ssid_pass(void * arg)
 {
-  char * argv[4];
+  char * argv[3];
   int argc =cmdline_strtok((char*)arg,argv,3);
   if(argc<3){
     debug_info(INFO"please input %s [<ssid>] [<pwd>]\r\n",ESP_SET_SSID_PASS_CMD);
@@ -54,8 +56,15 @@ void esp_get_ssid_pass(void * arg)
 }
 
 // 设置串口模式
-void set_usart_mode(void * arg)
+void start_IAP_mode(void * arg)
 {
+  char * argv[2];
+  int argc =cmdline_strtok((char*)arg,argv,2);
+  if(argc<2){
+    debug_info(INFO"please input %s [<partition>] \r\n",IAP_CMD);
+    return;
+  }
+  download_part=atoi(argv[1]);
   usart1_mode=1;
 }
 
@@ -66,5 +75,5 @@ void register_user_cmd()
   shell_register_command("esp_connect_ap",connect_ap);
   shell_register_command(ESP_SET_SSID_PASS_CMD,esp_set_ssid_pass);
   shell_register_command(ESP_GET_SSID_PASS_CMD,esp_get_ssid_pass);
-  shell_register_command("AT+IAP",set_usart_mode);
+  shell_register_command(IAP_CMD,start_IAP_mode);
 }

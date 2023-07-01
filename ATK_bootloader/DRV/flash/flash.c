@@ -44,12 +44,12 @@ u32 STMFLASH_Write(u32 WriteAddr,u32* pBuffer,u32 NumToWrite)
 { 
   FLASH_Status status = FLASH_COMPLETE;
 	u32 addrx=WriteAddr;                        // 写入的起始地址
-	u32 end_addr=WriteAddr+NumToWrite*4;        // 写入的结束地址
+	u32 end_addr=WriteAddr+NumToWrite*4;        // 写入的结束地址,加1
   u32 word_num=0;
   /* 地址检查 */
   if( addrx < STM32_FLASH_BASE ||
-      addrx >= ADDR_FLASH_SYSTEM_MEM ||       // 起始地址检查
-      end_addr >= ADDR_FLASH_SYSTEM_MEM ||    // 终止地址检查
+      addrx > ADDR_FLASH_SYSTEM_MEM ||       // 起始地址检查
+      end_addr > ADDR_FLASH_SYSTEM_MEM ||    // 终止地址检查
       addrx % 4 
       ){
         debug_err(ERR"STMFLASH_Write Address error! addrx:0x%08x\r\n",addrx);

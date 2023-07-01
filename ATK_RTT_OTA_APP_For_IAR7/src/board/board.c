@@ -9,14 +9,14 @@
  */
 #include "board.h"
 
-/** ç”¨æˆ·ç¼–å†™éƒ¨åˆ† **/
+/** ÓÃ»§±àÐ´²¿·Ö **/
 
 #ifdef RT_HEAP_USING_CCMRAM
 #ifndef RT_CCMRAM_AUTO_ALLOC
 
-#define RT_HEAP_SIZE 7680                           // use: RT_HEAP_SIZE*4 (Byte)
+#define RT_HEAP_SIZE 7680                           // use: RT_HEAP_SIZE*4 (Byte) 30KB
 #pragma default_variable_attributes = @ ".sram"
-static uint32_t rt_heap[RT_HEAP_SIZE];              // ä½¿ç”¨CCMçš„RAMç©ºé—´
+static uint32_t rt_heap[RT_HEAP_SIZE];              // Ê¹ÓÃCCMµÄRAM¿Õ¼ä
 #pragma default_variable_attributes =
 RT_WEAK void *rt_heap_begin_get(void)
 {
@@ -29,7 +29,7 @@ RT_WEAK void *rt_heap_end_get(void)
 }
 #endif  //RT_CCMRAM_AUTO_ALLOC
 
-#else // ä¸ä½¿ç”¨CCMã€‚ä½¿ç”¨0x2**çš„RAM
+#else // ²»Ê¹ÓÃCCM¡£Ê¹ÓÃ0x2**µÄRAM
 #define RT_HEAP_SIZE 7680                           // use: RT_HEAP_SIZE*4 (Byte)
 static uint32_t rt_heap[RT_HEAP_SIZE];  
 RT_WEAK void *rt_heap_begin_get(void)
@@ -92,23 +92,25 @@ void SystemClock_Config(void)
   }
 }
 
-// å¾®ç§’å»¶æ—¶å‡½æ•°
+///*************Î¢ÃëÑÓÊ±º¯Êý*************/
+//us²»Òª³¬¹ý32Î»ÊýÖµµÄ·¶Î§
+//¸Ãº¯ÊýÊ±ºòÊ±±ØÐëÔÚµ÷¶ÈÆ÷Æô¶¯Ö®ºóÊ¹ÓÃ£¬·ñÔòsystickÃ»ÓÐÆô¶¯£¬µ¼ÖÂÒ»Ö±ÔÚÕâÀïÑ­»·
 void hw_us_delay(unsigned int us)
 {
     unsigned int start=0, now=0, reload=0, us_tick=0 ,tcnt=0 ;
-    start = SysTick->VAL;                       //systickçš„å½“å‰è®¡æ•°å€¼ï¼ˆèµ·å§‹å€¼ï¼‰
-    reload = SysTick->LOAD;                     //systickçš„é‡è½½å€¼
-    us_tick = SystemCoreClock / 1000000UL;      //1usä¸‹çš„systickè®¡æ•°å€¼ï¼ŒconfigCPU_CLOCK_HZä¸º1sä¸‹çš„è®¡æ•°å€¼ï¼Œéœ€è¦é…ç½®systickæ—¶é’Ÿæºä¸ºHCLK
+    start = SysTick->VAL;                       //systickµÄµ±Ç°¼ÆÊýÖµ£¨ÆðÊ¼Öµ£©
+    reload = SysTick->LOAD;                     //systickµÄÖØÔØÖµ
+    us_tick = SystemCoreClock / 1000000UL;   //1usÏÂµÄsystick¼ÆÊýÖµ£¬SystemCoreClockÎª1sÏÂµÄ¼ÆÊýÖµ£¬ÐèÒªÅäÖÃsystickÊ±ÖÓÔ´ÎªHCLK
     do {
-      now = SysTick->VAL;                       //systickçš„å½“å‰è®¡æ•°å€¼
+      now = SysTick->VAL;                       //systickµÄµ±Ç°¼ÆÊýÖµ
       if(now!=start){
-        tcnt += now < start ? start - now : reload - now + start;    //èŽ·å–å½“å‰systickç»è¿‡çš„tickæ•°é‡ï¼Œç»Ÿä¸€ç´¯åŠ åˆ°tcntä¸­
-        start=now;                              //é‡æ–°èŽ·å–systickçš„å½“å‰è®¡æ•°å€¼ï¼ˆèµ·å§‹å€¼ï¼‰
+        tcnt += now < start ? start - now : reload - now + start;    //»ñÈ¡µ±Ç°systick¾­¹ýµÄtickÊýÁ¿£¬Í³Ò»ÀÛ¼Óµ½tcntÖÐ
+        start=now;                              //ÖØÐÂ»ñÈ¡systickµÄµ±Ç°¼ÆÊýÖµ£¨ÆðÊ¼Öµ£©
       }
-    } while(tcnt < us_tick * us);               //å¦‚æžœè¶…å‡ºï¼Œå»¶æ—¶å®Œæˆ
+    } while(tcnt < us_tick * us);               //Èç¹û³¬³ö£¬ÑÓÊ±Íê³É
 }
 
-/** æ‹·è´drv_common.céƒ¨åˆ† **/
+/** ¿½±´drv_common.c²¿·Ö **/
 #ifdef RT_USING_SERIAL
 #include "drv_usart.h"
 #endif

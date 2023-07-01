@@ -7,15 +7,28 @@
 typedef struct{
   char wifi_ssid[50];               // wifi名称
   char wifi_pwd[50];                // wifi密码
-  uint8_t flag;                     // 有参数标志
+  uint8_t flag;                     // 存储标志
+  
+  // app分区
+  uint8_t current_part;             // 当前所在分区 1 2
 }sys_parameter_t;
 extern sys_parameter_t sys_parameter;
 
+typedef  void (*pFunction)(void); 
+
 /** 分区信息 **/
-#define BOOTLOADER_START_ADDR             ADDR_FLASH_SECTOR_0             // 参数区域地址(64 Kbytes )
+#define BOOTLOADER_START_ADDR             ADDR_FLASH_SECTOR_0             // BOOT区域地址(64 Kbytes )
 #define SYS_PARAMETER_START_ADDR          ADDR_FLASH_SECTOR_4             // 参数区域地址(64 Kbytes )
 #define APP1_START_ADDR                   ADDR_FLASH_SECTOR_5             // APP区域1(384 Kbytes ) 可以当做工厂分区，不允许轻易覆盖这个分区
+#define APP1_END_ADDR                     (ADDR_FLASH_SECTOR_8-1)
+#define APP1_SIZE                         (ADDR_FLASH_SECTOR_8-ADDR_FLASH_SECTOR_5)
+
 #define APP2_START_ADDR                   ADDR_FLASH_SECTOR_8             // APP区域2(512 Kbytes )
+#define APP2_END_ADDR                     (ADDR_FLASH_SECTOR_11-1)
+#define APP2_SIZE                         (ADDR_FLASH_SECTOR_11-ADDR_FLASH_SECTOR_8)
+
+// 计算上传镜像 
+#define FLASH_IMAGE_SIZE                 (uint32_t) (STM32_FLASH_SIZE - (APP1_START_ADDR - 0x08000000)) // 没有适配
 
 /** 参数区域定义 **/
 #define SYS_PARAMETER_END_ADDR            (ADDR_FLASH_SECTOR_5-1)
@@ -47,13 +60,6 @@ extern sys_parameter_t sys_parameter;
 #define ADDR_FLASH_SECTOR_10    ((u32)0x080C0000) 	//扇区10起始地址,128 Kbytes  
 #define ADDR_FLASH_SECTOR_11    ((u32)0x080E0000) 	//扇区11起始地址,128 Kbytes  
 #define ADDR_FLASH_SYSTEM_MEM   ((u32)0X1FFF0000) 	//STM32F4 系统存储器的起始地址 30 Kbytes
-
-/** 后面调整 **/  
-typedef  void (*pFunction)(void);                                            
-#define ApplicationAddress                APP1_START_ADDR
-/* Compute the FLASH upload image size */  
-#define FLASH_IMAGE_SIZE                 (uint32_t) (STM32_FLASH_SIZE - (ApplicationAddress - 0x08000000))
-
                                             
 /** debug 层控制 **/
 // 0xff 显示所有层的信息

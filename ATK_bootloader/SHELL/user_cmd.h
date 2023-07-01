@@ -4,6 +4,7 @@
 
 #define  ESP_SET_SSID_PASS_CMD               "esp_set_wifi"
 #define  ESP_GET_SSID_PASS_CMD               "esp_get"
+#define  IAP_CMD                             "iap"
 
 void register_user_cmd(void);
 #endif

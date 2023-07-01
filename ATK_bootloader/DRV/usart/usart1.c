@@ -19,7 +19,7 @@
 // 串口1DMA_RX配置
 #define USARTx_RX_DMA_STREAM     						DMA2_Stream5
 #define USARTx_RX_DMA_CHANNEL    						DMA_Channel_4
-#define USARTx_RINGBUF_SIZE                 256
+#define USARTx_RINGBUF_SIZE                 (1050)        // 超级终端中使用至少需要1050
 
 /**************************user config*************************/
 

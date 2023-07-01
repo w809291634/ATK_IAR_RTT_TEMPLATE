@@ -69,10 +69,12 @@ int main(void)
   while(1){
     softTimer_Update();         // 软件定时器扫描
     esp32_at_app_cycle();       // esp32 的应用循环
+    usart1_mode=1;
+    download_part=1;
     if(usart1_mode==0)
       shell_app_cycle();          // shell 控制台应用循环 
     else{
-      IAP_download_cycle();
+      IAP_download();
     }
   }
 }
