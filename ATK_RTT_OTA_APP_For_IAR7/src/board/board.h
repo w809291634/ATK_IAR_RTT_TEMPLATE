@@ -16,6 +16,7 @@
 #include "drv_gpio.h"
 #include <rthw.h>
 #include <rtdevice.h>
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,9 +32,14 @@ void SystemClock_Config(void);
 #define DMA_NOT_AVAILABLE ((DMA_INSTANCE_TYPE *)0xFFFFFFFFU)
 #define CCMRAM __attribute__((section(".sram")))         // 使用CCM，IAR8支持
 
+#define NVIC_VectTab_RAM             ((uint32_t)0x20000000)
+#define NVIC_VectTab_FLASH           ((uint32_t)0x08000000)
+#define IS_NVIC_VECTTAB(VECTTAB) (((VECTTAB) == NVIC_VectTab_RAM) || \
+                                  ((VECTTAB) == NVIC_VectTab_FLASH))
+
 #define STM32_FLASH_START_ADRESS     ((uint32_t)0x08000000)
-#define STM32_FLASH_SIZE             (1024 * 1024)
-#define STM32_FLASH_END_ADDRESS      ((uint32_t)(STM32_FLASH_START_ADRESS + STM32_FLASH_SIZE))
+#define STM32_FLASH_SIZE_BYTE        (1024 * 1024)
+#define STM32_FLASH_END_ADDRESS      ((uint32_t)(STM32_FLASH_START_ADRESS + STM32_FLASH_SIZE_BYTE))
 
 // 由于 CSTACK 分配原因，这里SRAM1不支持自动分配
 //#define STM32_SRAM1_SIZE            (128)

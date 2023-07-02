@@ -6,7 +6,9 @@
 #include "cmb_def.h"
 #include "LED/led_drv.h"
 #include "led_app.h"
+#include "flash.h"
 
+sys_parameter_t sys_parameter;
 static  rt_thread_t  LEDThread;	
 #define HARDWARE_VERSION               "V1.0.0"
 
@@ -33,6 +35,7 @@ void fault_test_by_unalign(void)
 
 static void hardware_init(void)
 {
+  SYS_PARAMETER_READ;
   LED_init();
 #ifdef RT_USING_CMBACKTRACE
   cm_backtrace_init("CmBacktrace", HARDWARE_VERSION, CMB_SW_VERSION);       // 初始化调试栈
@@ -47,6 +50,10 @@ int main(void)
 											          1024,	10, 10);
 	rt_thread_startup(LEDThread);
   
+  while(1){
+    rt_kprintf("this is app 1 program!\r\n");
+    rt_thread_mdelay(1000);
+  }
   return 0;
 }
 

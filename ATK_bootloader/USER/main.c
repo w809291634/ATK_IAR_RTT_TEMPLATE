@@ -9,34 +9,27 @@
 #include "config.h"
 #include "flash.h"
 #include "download.h"
+#include "app_start.h"
 
 // 系统参数保存区域
 sys_parameter_t sys_parameter;
-// 获取参数
-static void get_system_parameter()
-{
-  SYS_PARAMETER_READ;
-  if(sys_parameter.flag==SYS_PARAMETER_OK){
-    debug_info(INFO"Read parameter success!\r\n");
-    debug_info(INFO"ssid:%s\r\n",sys_parameter.wifi_ssid);
-    debug_info(INFO"pwd:%s\r\n",sys_parameter.wifi_pwd);
-  }  
-  else{
-    debug_info(INFO"Please use %s cmd set wifi parameter!\r\n",ESP_SET_SSID_PASS_CMD);
-  }
-}
 
 // 系统初始化
 static void system_init()
 {
+  NVIC_SetVectorTable(NVIC_VectTab_FLASH,0);          // 重映射中断向量表
   NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );		// 中断分组
+  
   /* 初始化 shell 控制台 */
   shell_hw_init(115200);                  // 初始化 控制台串口硬件
   shell_init("shell >" ,usart1_puts);     // 初始化 控制台输出
   shell_input_init(&shell_1,usart1_puts); // 初始化 交互
-  welcome_gets(&shell_1,0,0);             // 主动显示 welcome
-  
-  get_system_parameter();                 // 读取参数
+  welcome_gets(&shell_1,0,0);             // 主动显示 welcome'
+  printk(INFO"Entered the bootloader program!\r\n");
+
+  /* 启动 app */
+  SYS_PARAMETER_READ;
+  start_app_partition(sys_parameter.current_part);
   
   /* shell 控制台进行用户输入 */
   cmdline_gets(&shell_1,"\r",1);          // 一次换行
@@ -69,8 +62,6 @@ int main(void)
   while(1){
     softTimer_Update();         // 软件定时器扫描
     esp32_at_app_cycle();       // esp32 的应用循环
-    usart1_mode=1;
-    download_part=1;
     if(usart1_mode==0)
       shell_app_cycle();          // shell 控制台应用循环 
     else{

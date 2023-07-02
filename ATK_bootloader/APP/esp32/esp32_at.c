@@ -301,7 +301,7 @@ void esp32_at_app_cycle(void)
 void esp32_connect_ap_start(void)
 {
   // 首次使用请设置 wifi 连接参数
-  if(sys_parameter.flag!=SYS_PARAMETER_OK){
+  if(sys_parameter.wifi_flag!=FLAG_OK){
     debug_info(INFO"Please use %s cmd set wifi parameter!\r\n",ESP_SET_SSID_PASS_CMD);
     return;
   }

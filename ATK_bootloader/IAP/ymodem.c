@@ -248,9 +248,9 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
   {
     return -1;
   }
-  /* It seems odd that the CRC doesn't cover the three preamble bytes. */
+  // crc校验出错 
   if((Cal_CRC16((unsigned char *)(data + PACKET_HEADER), packet_size + PACKET_TRAILER)&0xFFFF) != 0)	{
-    return -1;	//crc校验出错
+    return -1;
   }
   // 数据包长度
   *length = packet_size;
@@ -265,17 +265,17 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
   * @param  timeout: 超时
   * @retval The size of the file
   */
-static uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
-int32_t Ymodem_Receive (uint8_t *buf,uint32_t partition_start ,uint32_t partition_size,uint32_t timeout)
+int32_t Ymodem_Receive (uint32_t partition_start ,uint32_t partition_size,uint32_t timeout)
 {
   uint32_t RamSource;
-//  uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
+  uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
   uint8_t file_size[FILE_SIZE_LENGTH], *file_ptr;
   int32_t i, j, packet_length, session_done, file_done, packets_received, errors, session_begin, size = 0;
 
   /* 初始化写flash的地址 */
   uint32_t FlashDestination = partition_start; 
   uint32_t partition_end = FlashDestination+partition_size;  // 加1
+  uint32_t st_time = millis(); 
 
   for (session_done = 0, errors = 0, session_begin = 0; ;)
   {
@@ -301,6 +301,7 @@ int32_t Ymodem_Receive (uint8_t *buf,uint32_t partition_start ,uint32_t partitio
               break;
             /* 处理正常的数据包 */
             default:
+              st_time = millis(); 
               /* 数据帧序号，保证接收和发送数量一致 */
               if ((packet_data[PACKET_SEQNO_INDEX] & 0xff) != (packets_received & 0xff))
               {
@@ -367,7 +368,7 @@ int32_t Ymodem_Receive (uint8_t *buf,uint32_t partition_start ,uint32_t partitio
                     Send_Byte(ACK);
                     Send_Byte(CRC16);
                   }
-                  /* 文件名数据包为空，结束会话 */
+                  /* 文件名数据包为空,结束帧,结束会话 */
                   else
                   {
                     Send_Byte(ACK);
@@ -379,8 +380,7 @@ int32_t Ymodem_Receive (uint8_t *buf,uint32_t partition_start ,uint32_t partitio
                 /* 获取其他数据包并烧写 */
                 else
                 {
-                  memcpy(buf, packet_data + PACKET_HEADER, packet_length);
-                  RamSource = (uint32_t)buf;
+                  RamSource = (uint32_t)packet_data + PACKET_HEADER;
                   
                   /* 数据编程 */
                   FLASH_Unlock();	
@@ -426,7 +426,15 @@ int32_t Ymodem_Receive (uint8_t *buf,uint32_t partition_start ,uint32_t partitio
             Send_Byte(CA);
             return -10;
           }
-          Send_Byte(CRC16);     // 发送字符'C'
+          
+          // 超时
+          if( millis()-st_time>timeout){
+            Send_Byte(CA);      // 请求结束传输
+            Send_Byte(CA);
+            return -11;
+          }
+          
+          Send_Byte(CRC16);     // 发送字符'C' 
           break;
       }
       if (file_done != 0) break;

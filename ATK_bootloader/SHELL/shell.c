@@ -925,7 +925,7 @@ void shell_init(char * defaultsign ,fmt_puts_t puts)
 	default_puts = puts ;
 	
 	/* 注册一些基本命令 */
-	shell_register_command("cmd-list"     ,shell_list_cmd);
+	shell_register_command("help"     ,shell_list_cmd);
 	shell_register_command("shell-version",shell_version);
 	shell_register_command("clear"        ,shell_clean_screen);
 	shell_register_command("debug-info"   ,shell_debug_stream);

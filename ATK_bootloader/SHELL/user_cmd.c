@@ -5,6 +5,7 @@
 #include "usart1.h"
 #include "download.h"
 #include "stdlib.h"
+#include "app_start.h"
 
 void SoftReset(void* arg)
 { 
@@ -34,28 +35,23 @@ void esp_set_ssid_pass(void * arg)
   }
   strcpy(sys_parameter.wifi_ssid,argv[1]);
   strcpy(sys_parameter.wifi_pwd,argv[2]);
-  sys_parameter.flag=SYS_PARAMETER_OK;
+  sys_parameter.wifi_flag=FLAG_OK;
   
-  uint32_t num=SYS_PARAMETER_WRITE;
-  if(SYS_PARAMETER_SIZE==num){
-    debug_info(INFO"System Parameter Write Success!,num:%d word\r\n",num);
-  }else{
-    debug_err(ERR"System Parameter Write Failed!size:%d num:%d\r\n",SYS_PARAMETER_SIZE,num);
-  }
+  write_sys_parameter();
 }
 
 // 读取 flash 中存储的 ssid
 void esp_get_ssid_pass(void * arg)
 {
   SYS_PARAMETER_READ;
-  if(sys_parameter.flag!=SYS_PARAMETER_OK){
+  if(sys_parameter.wifi_flag!=APP_OK){
     debug_info(INFO"Please use %s cmd set wifi parameter!\r\n",ESP_SET_SSID_PASS_CMD);
   }
   debug_info(INFO"wifi ssid:%s\r\n",sys_parameter.wifi_ssid);
   debug_info(INFO"wifi passwd:%s\r\n",sys_parameter.wifi_pwd);
 }
 
-// 设置串口模式
+// 启动 IAP 模式
 void start_IAP_mode(void * arg)
 {
   char * argv[2];
@@ -68,6 +64,21 @@ void start_IAP_mode(void * arg)
   usart1_mode=1;
 }
 
+// 启动 APP
+void Start_APP(void * arg)
+{
+  char * argv[2];
+  int argc =cmdline_strtok((char*)arg,argv,2);
+  if(argc<2){
+    debug_info(INFO"please input %s [<partition>] \r\n",Start_APP);
+    return;
+  }
+  int partition=atoi(argv[1]);
+  sys_parameter.current_part=partition;
+  write_sys_parameter();
+  start_app_partition(partition);
+}
+
 // 用户命令注册
 void register_user_cmd()
 {
@@ -76,4 +87,5 @@ void register_user_cmd()
   shell_register_command(ESP_SET_SSID_PASS_CMD,esp_set_ssid_pass);
   shell_register_command(ESP_GET_SSID_PASS_CMD,esp_get_ssid_pass);
   shell_register_command(IAP_CMD,start_IAP_mode);
+  shell_register_command(APP_START,Start_APP);
 }

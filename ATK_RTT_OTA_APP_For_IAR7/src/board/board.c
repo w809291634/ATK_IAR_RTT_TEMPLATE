@@ -110,6 +110,16 @@ void hw_us_delay(unsigned int us)
     } while(tcnt < us_tick * us);               //如果超出，延时完成
 }
 
+// 设置向量表
+void NVIC_SetVectorTable(uint32_t NVIC_VectTab, uint32_t Offset)
+{ 
+  /* Check the parameters */
+  assert_param(IS_NVIC_VECTTAB(NVIC_VectTab));
+  assert_param(IS_NVIC_OFFSET(Offset));  
+   
+  SCB->VTOR = NVIC_VectTab | (Offset & (uint32_t)0x1FFFFF80);
+}
+
 /** 拷贝drv_common.c部分 **/
 #ifdef RT_USING_SERIAL
 #include "drv_usart.h"
@@ -239,7 +249,15 @@ RT_WEAK void rt_hw_board_init()
     /* Enable D-Cache---------------------------------------------------------*/
     SCB_EnableDCache();
 #endif
-
+    /* APP所在分区，设置向量表 */
+#if APP_PARTITION==1
+    NVIC_SetVectorTable(NVIC_VectTab_FLASH,(APP1_START_ADDR - NVIC_VectTab_FLASH));
+#elif (APP_PARTITION==2) 
+    NVIC_SetVectorTable(NVIC_VectTab_FLASH,(APP2_START_ADDR - NVIC_VectTab_FLASH));
+#else
+    NVIC_SetVectorTable(NVIC_VectTab_FLASH,0);
+#endif
+    
     /* HAL_Init() function is called at the beginning of the program */
     HAL_Init();
 

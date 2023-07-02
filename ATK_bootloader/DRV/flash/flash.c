@@ -134,3 +134,13 @@ void STMFLASH_Read_Write_test(u32 start_add,u32 end_add)
   }
   count=1;
 }
+
+// 写系统参数
+void write_sys_parameter()
+{
+  if(SYS_PARAMETER_SIZE<=SYS_PARAMETER_PART_SIZE && SYS_PARAMETER_SIZE==SYS_PARAMETER_WRITE){
+    debug_info(INFO"System Parameter Write Success!\r\n");
+  }else{
+    debug_err(ERR"System Parameter Write Failed!",SYS_PARAMETER_SIZE);
+  }
+}

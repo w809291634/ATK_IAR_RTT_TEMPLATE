@@ -192,5 +192,7 @@
 #define RT_CCMRAM_AUTO_ALLOC              // CCMRAM 自动分配内存到RTT系统
 #endif
 
+/* boot程序设置 */
+#define APP_PARTITION                    1 // 0:FLASH起始地址 1：app1  2：app2          
 
 #endif

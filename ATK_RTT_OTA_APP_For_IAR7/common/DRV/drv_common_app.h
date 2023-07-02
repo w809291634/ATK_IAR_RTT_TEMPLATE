@@ -8,7 +8,6 @@ typedef struct{
 } io_pin;
 
 #define IO_PIN(gpio, pin) {GPIO##gpio, GPIO_PIN_##pin},
-#define ARRAY_SIZE(ar) (sizeof(ar) / sizeof(ar[0]))
 
 void pin_output_pp_Init(io_pin* io_pin);
 void pin_input_nopull_Init(io_pin* io_pin);

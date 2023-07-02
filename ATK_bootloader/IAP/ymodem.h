@@ -53,7 +53,7 @@
 #define ABORT2                  (0x61)  /* 'a' == 0x61, abort by user */
 
 #define NAK_TIMEOUT             (0x100000)
-#define MAX_ERRORS              (100)
+#define MAX_ERRORS              (5)
 
 /* Exported macro ------------------------------------------------------------*/
 /* Common routines */
@@ -71,7 +71,7 @@
 uint16_t Cal_CRC16(const uint8_t* data, uint32_t size);
 void Int2Str(uint8_t* str, int32_t intnum);
 uint32_t Str2Int(uint8_t *inputstr, int32_t *intnum);
-int32_t Ymodem_Receive (uint8_t *buf,uint32_t Destination ,uint32_t partition_size,uint32_t timeout);
+int32_t Ymodem_Receive (uint32_t Destination ,uint32_t partition_size,uint32_t timeout);
 uint8_t Ymodem_Transmit (uint8_t *,const  uint8_t* , uint32_t );
 
 #endif  /* _YMODEM_H_ */

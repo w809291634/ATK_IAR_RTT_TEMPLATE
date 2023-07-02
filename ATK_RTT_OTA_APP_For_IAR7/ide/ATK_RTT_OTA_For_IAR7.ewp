@@ -319,6 +319,8 @@
           <state>$PROJ_DIR$\..\Common\CmBacktrace\cm_backtrace\Languages\zh-CN</state>
           <state>$PROJ_DIR$\..\Common\CmBacktrace\cm_backtrace\Languages\en-US</state>
           <state>$PROJ_DIR$\..\Common\DRV\</state>
+          <state>$PROJ_DIR$\..\Common\DRV\flash\</state>
+          <state>$PROJ_DIR$\..\..\ATK_CONFIG\</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -732,7 +734,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\stm32f407xG_user.icf</state>
+          <state>$PROJ_DIR$\stm32f407xG_app1.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -2017,6 +2019,12 @@
           <name>$PROJ_DIR$\..\..\..\bsp\stm32\libraries\STM32F4xx_HAL\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash.c</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\..\..\..\bsp\stm32\libraries\STM32F4xx_HAL\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash_ex.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\..\bsp\stm32\libraries\STM32F4xx_HAL\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash_ramfunc.c</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\..\..\bsp\stm32\libraries\STM32F4xx_HAL\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_gpio.c</name>
         </file>
         <file>
@@ -2152,6 +2160,9 @@
       <file>
         <name>$PROJ_DIR$\..\src\app\led_app.c</name>
       </file>
+      <file>
+        <name>$PROJ_DIR$\..\src\app\user_cmd.c</name>
+      </file>
     </group>
     <group>
       <name>common</name>
@@ -2194,11 +2205,17 @@
           <name>$PROJ_DIR$\..\common\DRV\drv_common_app.c</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\..\common\DRV\flash\flash.c</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\common\DRV\LED\led_drv.c</name>
         </file>
       </group>
     </group>
   </group>
+  <file>
+    <name>$PROJ_DIR$\..\..\ATK_CONFIG\config.h</name>
+  </file>
   <file>
     <name>$PROJ_DIR$\..\src\main.c</name>
   </file>
