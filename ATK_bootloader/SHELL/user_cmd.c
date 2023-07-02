@@ -70,7 +70,7 @@ void Start_APP(void * arg)
   char * argv[2];
   int argc =cmdline_strtok((char*)arg,argv,2);
   if(argc<2){
-    debug_info(INFO"please input %s [<partition>] \r\n",Start_APP);
+    debug_info(INFO"please input %s [<partition>] \r\n",APP_START);
     return;
   }
   int partition=atoi(argv[1]);
