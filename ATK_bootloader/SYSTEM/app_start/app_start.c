@@ -92,25 +92,23 @@ void start_app_partition(uint8_t partition)
   switch(partition){
     case 1:{
       if(sys_parameter.app1_flag==APP_OK){
-        printk(INFO"Starting partition 1!\r\n");
-        printk(INFO"Next automatic start partition 1!\r\n");
+        printf(INFO"Starting partition 1!\r\n");
         JumpToApp(APP1_START_ADDR);
       }else{
-        printk(INFO"Starting partition 1 fail!\r\n");
+        printf(INFO"Starting partition 1 fail!\r\n");
       }
     }break;
     case 2:{
       if(sys_parameter.app2_flag==APP_OK){
-        printk(INFO"Starting partition 2!\r\n");
-        printk(INFO"Next automatic start partition 2!\r\n");
+        printf(INFO"Starting partition 2!\r\n");
         JumpToApp(APP2_START_ADDR);
       }else{
-        printk(INFO"Starting partition 2 fail!\r\n");
+        printf(INFO"Starting partition 2 fail!\r\n");
       }
     }break;
     case 0xff:break;
     default:{
-      printk(INFO"partition %d not assigned!\r\n",partition);
+      printf(INFO"partition %d not assigned!\r\n",partition);
     }break;
   }
 }

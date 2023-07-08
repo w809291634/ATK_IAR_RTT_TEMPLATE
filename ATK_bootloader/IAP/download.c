@@ -28,19 +28,19 @@ void IAP_download(void)
   }
   
   /* 进入下载模式 */
-  printk("The current download partition is app%d,start_address:0x%08x,size:%d Bytes\n\r",
+  printf("The current download partition is app%d,start_address:0x%08x,size:%d Bytes\n\r",
      download_part,partition_start,partition_size);
-  printk("Waiting for the file to be sent ... (press 'a' key to exit IAP mode)\n\r");
+  printf("Waiting for the file to be sent ... (press 'a' key to exit IAP mode)\n\r");
   
   // 阻塞运行
   Size = Ymodem_Receive(partition_start,partition_size,timeout);
   hw_ms_delay(500);
   if (Size > 0)
   {
-    printk("\n\n\r Programming Completed Successfully!\n\r--------------------------------\r\n Name: %s",(char*)file_name);
+    printf("\n\n\r Programming Completed Successfully!\n\r--------------------------------\r\n Name: %s",(char*)file_name);
     Int2Str(Number, Size);
-    printk("\n\r Size: %s Bytes\r\n",(char*)Number);
-    printk("-------------------\r\n");
+    printf("\n\r Size: %s Bytes\r\n",(char*)Number);
+    printf("-------------------\r\n");
     if(download_part==1) sys_parameter.app1_flag=APP_OK;
     else if(download_part==2) sys_parameter.app2_flag=APP_OK;
     write_sys_parameter();

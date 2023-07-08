@@ -36,15 +36,15 @@ typedef  void (*pFunction)(void);
 #define APP_OK      0x4D
 #define APP_ERR     0xFF
 
-#define BOOTLOADER_START_ADDR             ADDR_FLASH_SECTOR_0             // BOOT区域地址(64 Kbytes )
-#define SYS_PARAMETER_START_ADDR          ADDR_FLASH_SECTOR_4             // 参数区域地址(64 Kbytes )
-#define APP1_START_ADDR                   ADDR_FLASH_SECTOR_5             // APP区域1(384 Kbytes ) 可以当做工厂分区，不允许轻易覆盖这个分区
+#define BOOTLOADER_START_ADDR             ADDR_FLASH_SECTOR_0             // BOOT区域地址(48 Kbytes )
+#define SYS_PARAMETER_START_ADDR          ADDR_FLASH_SECTOR_3             // 参数区域地址(16 Kbytes )
+#define APP1_START_ADDR                   ADDR_FLASH_SECTOR_4             // APP区域1(448 Kbytes ) 可以当做工厂分区，不允许轻易覆盖这个分区
 #define APP1_END_ADDR                     (ADDR_FLASH_SECTOR_8-1)
-#define APP1_SIZE                         (ADDR_FLASH_SECTOR_8-ADDR_FLASH_SECTOR_5)
+#define APP1_SIZE                         (APP1_END_ADDR-APP1_START_ADDR+1)
 
-#define APP2_START_ADDR                   ADDR_FLASH_SECTOR_8             // APP区域2(512 Kbytes )
+#define APP2_START_ADDR                   (APP1_END_ADDR+1)             // APP区域2(512 Kbytes )
 #define APP2_END_ADDR                     ADDR_FLASH_SECTOR_11_END
-#define APP2_SIZE                         (ADDR_FLASH_SECTOR_11_END+1 -ADDR_FLASH_SECTOR_8)
+#define APP2_SIZE                         (APP2_END_ADDR-APP2_START_ADDR+1)
 
 // 计算上传镜像 
 #define FLASH_IMAGE_SIZE                 (uint32_t) (STM32_FLASH_SIZE - (APP1_START_ADDR - 0x08000000)) // 没有适配
@@ -93,31 +93,31 @@ typedef  void (*pFunction)(void);
 #define INFO "INFORMATION:"
 
 #if (DEBUG & 0x01)
-#define debug printk
+#define debug printf
 #else
 #define debug(...)
 #endif
 
 #if (DEBUG & 0x02)
-#define debug_err printk
+#define debug_err printf
 #else
 #define debug_err(...)
 #endif
 
 #if (DEBUG & 0x04)
-#define debug_war printk
+#define debug_war printf
 #else
 #define debug_war(...)
 #endif
 
 #if (DEBUG & 0x08)
-#define debug_info printk
+#define debug_info printf
 #else
 #define debug_info(...)
 #endif
 
 #if (DEBUG & 0x10)
-#define debug_at printk
+#define debug_at printf
 #else
 #define debug_at(...)
 #endif

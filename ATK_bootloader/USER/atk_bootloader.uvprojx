@@ -313,7 +313,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>4</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>0</OneElfS>
@@ -424,11 +424,6 @@
               <FilePath>..\FWLIB\src\misc.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f4xx_dma.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\FWLIB\src\stm32f4xx_dma.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f4xx_gpio.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FWLIB\src\stm32f4xx_gpio.c</FilePath>
@@ -437,11 +432,6 @@
               <FileName>stm32f4xx_rcc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FWLIB\src\stm32f4xx_rcc.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_tim.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\FWLIB\src\stm32f4xx_tim.c</FilePath>
             </File>
             <File>
               <FileName>stm32f4xx_usart.c</FileName>
@@ -469,14 +459,14 @@
               <FilePath>..\SYSTEM\systick\systick.c</FilePath>
             </File>
             <File>
-              <FileName>soft_timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SYSTEM\soft_timer\soft_timer.c</FilePath>
-            </File>
-            <File>
               <FileName>app_start.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SYSTEM\app_start\app_start.c</FilePath>
+            </File>
+            <File>
+              <FileName>soft_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SYSTEM\soft_timer\soft_timer.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -497,11 +487,6 @@
               <FileName>shell.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SHELL\shell.c</FilePath>
-            </File>
-            <File>
-              <FileName>ustdio.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SHELL\ustdio.c</FilePath>
             </File>
             <File>
               <FileName>user_cmd.c</FileName>

@@ -2,7 +2,6 @@
 #define __SOFT_TIMER_H__
 #include "sys.h"
 #include "stm32f4xx_conf.h"
-#include "stdio.h"
 
 /*****************************************************
 * 已使用定时器ID

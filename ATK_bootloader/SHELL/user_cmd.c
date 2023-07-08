@@ -11,7 +11,7 @@ void SoftReset(void* arg)
 { 
   (void)arg;
   __set_FAULTMASK(1); // 关闭所有中端
-  NVIC_SystemReset(); // 复位，大多数外设模块的寄存器状态会在复位时回到其默认值
+  NVIC_SystemReset(); // 复位
 }
 
 // esp 触发连接AP

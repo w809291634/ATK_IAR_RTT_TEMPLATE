@@ -1,11 +1,11 @@
 #ifndef __SYS_H
 #define __SYS_H	 
 #include "stm32f4xx.h" 	
-#include "ustdio.h"
 #include "soft_timer.h"
 #include "string.h"
 #include "config.h"
 #include "systick.h"
+#include "stdio.h"
 
 //位带操作,实现51类似的GPIO控制功能
 //具体实现思想,参考<<CM3权威指南>>第五章(87页~92页).M4同M3类似,只是寄存器地址变了.

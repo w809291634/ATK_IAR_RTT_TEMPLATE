@@ -141,6 +141,6 @@ void write_sys_parameter()
   if(SYS_PARAMETER_SIZE<=SYS_PARAMETER_PART_SIZE && SYS_PARAMETER_SIZE==SYS_PARAMETER_WRITE){
     debug_info(INFO"System Parameter Write Success!\r\n");
   }else{
-    debug_err(ERR"System Parameter Write Failed!",SYS_PARAMETER_SIZE);
+    debug_err(ERR"System Parameter Write Failed!");
   }
 }

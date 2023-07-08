@@ -1,29 +1,24 @@
-#include "sys.h"  
+#include "sys.h"
+#include "usart1.h"
 
-//THUMB指令不支持汇编内联
-//采用如下方法实现执行汇编指令WFI  
-__asm void WFI_SET(void)
-{
-	WFI;		  
-}
-//关闭所有中断(但是不包括fault和NMI中断)
-__asm void INTX_DISABLE(void)
-{
-	CPSID   I
-	BX      LR	  
-}
-//开启所有中断
-__asm void INTX_ENABLE(void)
-{
-	CPSIE   I
-	BX      LR  
-}
-//设置栈顶地址
-//addr:栈顶地址
-__asm void MSR_MSP(u32 addr) 
-{
-	MSR MSP, r0 			//set Main Stack value
-	BX r14
+//标准库需要的支持函数                 
+struct __FILE 
+{ 
+	int handle; 
+};
+FILE __stdout;   
+
+//定义_sys_exit()以避免使用半主机模式    
+void _sys_exit(int x) 
+{ 
+	x = x; 
+} 
+
+//重定义fputc函数 
+int fputc(int ch, FILE *f)
+{      
+  usart1_put(ch);
+  return 0;
 }
 
 void* my_memcpy(void* dest, const void* src, size_t num)
@@ -53,9 +48,8 @@ void* my_memcpy(void* dest, const void* src, size_t num)
 void assert_failed(uint8_t* file, uint32_t line)
 { 
   /* User can add his own implementation to report the file name and line number,
-  ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  printk("\r\nWrong parameters value: file %s on line %d\r\n", file, line);
-  
+  printf("\r\nWrong parameters value: file %s on line %d\r\n", file, line);*/
+  printf("\r\nWrong parameters value: file %s on line %d\r\n", file, line);
   /* Infinite loop */
   while (1)
   {

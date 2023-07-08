@@ -1,18 +1,18 @@
 /**
   ******************************************************************************
   * @file           shell.c
-  * @author         å¤ä¹ˆå®
-  * @brief          shell å‘½ä»¤è§£é‡Šå™¨ï¼Œæ”¯æŒ  TAB é”®å‘½ä»¤è¡¥å…¨ï¼Œä¸Šä¸‹å·¦å³ç®­å¤´ ï¼ŒBACKSPACEå›åˆ 
+  * @author         ¹ÅÃ´Äş
+  * @brief          shell ÃüÁî½âÊÍÆ÷£¬Ö§³Ö  TAB ¼üÃüÁî²¹È«£¬ÉÏÏÂ×óÓÒ¼ıÍ· £¬BACKSPACE»ØÉ¾
   * @note
   * <pre>
-  * ä½¿ç”¨æ­¥éª¤:
-  *    0.åˆå§‹åŒ–ç¡¬ä»¶éƒ¨åˆ†ã€‚
-  *    1.ç¼–å†™ç¡¬ä»¶å¯¹åº”çš„void puts(char * buf , uint16_t len) å‘é€å‡½æ•°ã€‚
-  *    2.shell_init(sign,puts) åˆå§‹åŒ–è¾“å…¥æ ‡å¿—å’Œé»˜è®¤è¾“å‡ºã€‚
-  *    3.æ–°å»ºä¸€ä¸ª  shellinput_t shellx , åˆå§‹åŒ–è¾“å‡º shell_input_init(&shellx,puts,...);
-  *    4.æ¥æ”¶åˆ°ä¸€åŒ…æ•°æ®åï¼Œè°ƒç”¨ shell_input(shellx,buf,len)
-  *    *.  éœ€è¦æ³¨å†Œå‘½ä»¤åˆ™è°ƒç”¨å® shell_register_command è¿›è¡Œæ³¨å†Œã€‚
-  *    *.. shell_register_confirm() å¯æ³¨å†Œå¸¦é€‰é¡¹å‘½ä»¤([Y/N]é€‰é¡¹)
+  * Ê¹ÓÃ²½Öè:
+  *    0.³õÊ¼»¯Ó²¼ş²¿·Ö¡£
+  *    1.±àĞ´Ó²¼ş¶ÔÓ¦µÄvoid puts(char * buf , uint16_t len) ·¢ËÍº¯Êı¡£
+  *    2.shell_init(sign,puts) ³õÊ¼»¯ÊäÈë±êÖ¾ºÍÄ¬ÈÏÊä³ö¡£
+  *    3.ĞÂ½¨Ò»¸ö  shellinput_t shellx , ³õÊ¼»¯Êä³ö shell_input_init(&shellx,puts,...);
+  *    4.½ÓÊÕµ½Ò»°üÊı¾İºó£¬µ÷ÓÃ shell_input(shellx,buf,len)
+  *    *.  ĞèÒª×¢²áÃüÁîÔòµ÷ÓÃºê shell_register_command ½øĞĞ×¢²á¡£
+  *    *.. shell_register_confirm() ¿É×¢²á´øÑ¡ÏîÃüÁî([Y/N]Ñ¡Ïî)
   * </pre>
   ******************************************************************************
   *
@@ -27,17 +27,20 @@
 #include "shell.h"
 #include "containerof.h"
 
+fmt_puts_t current_puts = NULL;
+fmt_puts_t default_puts = NULL;
+
 /* Private types ------------------------------------------------------------*/
 
 union uncmd {
-	struct {// å‘½ä»¤å·åˆ†ä¸ºä»¥ä¸‹äº”ä¸ªéƒ¨åˆ†  
-		unsigned int CRC2      : 8;
-		unsigned int CRC1      : 8;///< ä½åå…­ä½ä¸ºä¸¤ä¸ª crc æ ¡éªŒç 
-		unsigned int Sum       : 5;///< å‘½ä»¤å­—ç¬¦çš„æ€»å’Œ
-		unsigned int Len       : 5;///< å‘½ä»¤å­—ç¬¦çš„é•¿åº¦ï¼Œ5 bit ï¼Œå³å‘½ä»¤é•¿åº¦ä¸èƒ½è¶…è¿‡31ä¸ªå­—ç¬¦
-		unsigned int FirstChar : 6;///< å‘½ä»¤å­—ç¬¦çš„ç¬¬ä¸€ä¸ªå­—ç¬¦
+	struct {// ÃüÁîºÅ·ÖÎªÒÔÏÂÎå¸ö²¿·Ö  
+		uint32_t CRC2      : 8;
+		uint32_t CRC1      : 8;///< µÍÊ®ÁùÎ»ÎªÁ½¸ö crc Ğ£ÑéÂë
+		uint32_t Sum       : 5;///< ÃüÁî×Ö·ûµÄ×ÜºÍ
+		uint32_t Len       : 5;///< ÃüÁî×Ö·ûµÄ³¤¶È£¬5 bit £¬¼´ÃüÁî³¤¶È²»ÄÜ³¬¹ı31¸ö×Ö·û
+		uint32_t FirstChar : 6;///< ÃüÁî×Ö·ûµÄµÚÒ»¸ö×Ö·û
 	}part;
-	unsigned int ID;               ///< ç”±æ­¤åˆå¹¶ä¸º 32 ä½çš„å‘½ä»¤ç 
+	uint32_t ID;               ///< ÓÉ´ËºÏ²¢Îª 32 Î»µÄÃüÁîÂë
 };
 
 /* Private macro ------------------------------------------------------------*/
@@ -56,7 +59,7 @@ union uncmd {
 
 /* Private variables --------------------------------------------------------*/
 
-static const  unsigned char F_CRC8_Table[256] = {//æ­£åº,é«˜ä½å…ˆè¡Œ x^8+x^5+x^4+1
+static const  unsigned char F_CRC8_Table[256] = {//ÕıĞò,¸ßÎ»ÏÈĞĞ x^8+x^5+x^4+1
 	0x00, 0x31, 0x62, 0x53, 0xc4, 0xf5, 0xa6, 0x97, 0xb9, 0x88, 0xdb, 0xea, 0x7d, 0x4c, 0x1f, 0x2e,
 	0x43, 0x72, 0x21, 0x10, 0x87, 0xb6, 0xe5, 0xd4, 0xfa, 0xcb, 0x98, 0xa9, 0x3e, 0x0f, 0x5c, 0x6d,
 	0x86, 0xb7, 0xe4, 0xd5, 0x42, 0x73, 0x20, 0x11, 0x3f, 0x0e, 0x5d, 0x6c, 0xfb, 0xca, 0x99, 0xa8,
@@ -75,7 +78,7 @@ static const  unsigned char F_CRC8_Table[256] = {//æ­£åº,é«˜ä½å…ˆè¡Œ x^8+x^5+x
 	0x82, 0xb3, 0xe0, 0xd1, 0x46, 0x77, 0x24, 0x15, 0x3b, 0x0a, 0x59, 0x68, 0xff, 0xce, 0x9d, 0xac
 };
 
-static const  unsigned char B_CRC8_Table[256] = {//ååº,ä½ä½å…ˆè¡Œ x^8+x^5+x^4+1
+static const  unsigned char B_CRC8_Table[256] = {//·´Ğò,µÍÎ»ÏÈĞĞ x^8+x^5+x^4+1
 	0x00, 0x5e, 0xbc, 0xe2, 0x61, 0x3f, 0xdd, 0x83, 0xc2, 0x9c, 0x7e, 0x20, 0xa3, 0xfd, 0x1f, 0x41,
 	0x9d, 0xc3, 0x21, 0x7f, 0xfc, 0xa2, 0x40, 0x1e, 0x5f, 0x01, 0xe3, 0xbd, 0x3e, 0x60, 0x82, 0xdc,
 	0x23, 0x7d, 0x9f, 0xc1, 0x42, 0x1c, 0xfe, 0xa0, 0xe1, 0xbf, 0x5d, 0x03, 0x80, 0xde, 0x3c, 0x62,
@@ -94,12 +97,12 @@ static const  unsigned char B_CRC8_Table[256] = {//ååº,ä½ä½å…ˆè¡Œ x^8+x^5+x
 	0x74, 0x2a, 0xc8, 0x96, 0x15, 0x4b, 0xa9, 0xf7, 0xb6, 0xe8, 0x0a, 0x54, 0xd7, 0x89, 0x6b, 0x35
 };
 
-/// ç´¢å¼•èµ·å§‹ç‚¹ï¼Œç›®å½•æ ¹
+/// Ë÷ÒıÆğÊ¼µã£¬Ä¿Â¼¸ù
 static cmd_root_t shellcmdroot = {0};
 
 /* Global variables ---------------------------------------------------------*/
 
-/// é»˜è®¤è¾“å‡ºæ ‡å¿—ï¼Œå¯ä¿®æ”¹
+/// Ä¬ÈÏÊä³ö±êÖ¾£¬¿ÉĞŞ¸Ä
 char DEFAULT_INPUTSIGN[COMMANDLINE_MAX_LEN] = "~ # ";
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,23 +111,23 @@ static void   shell_backspace   (struct shell_input * shellin) ;
 static void   shell_tab         (struct shell_input * shellin) ;
        void   shell_confirm     (struct shell_input * shellin ,char * info ,cmd_fn_t yestodo);
 
-#if (COMMANDLINE_MAX_RECORD)//å¦‚æœå®šä¹‰äº†å†å²çºªå½•
+#if (COMMANDLINE_MAX_RECORD)//Èç¹û¶¨ÒåÁËÀúÊ·¼ÍÂ¼
 	static char * shell_record(struct shell_input * shellin);
-	static void   shell_show_history(struct shell_input * shellin,int LastOrNext);
+	static void   shell_show_history(struct shell_input * shellin,int32_t LastOrNext);
 #else
 #	define shell_record(x)
 #	define shell_show_history(x,y)
-#endif //#if (COMMANDLINE_MAX_RECORD)//å¦‚æœå®šä¹‰äº†å†å²çºªå½•
+#endif //#if (COMMANDLINE_MAX_RECORD)//Èç¹û¶¨ÒåÁËÀúÊ·¼ÍÂ¼
 
 /* Gorgeous Split-line ------------------------------------------------------*/
 
 /**
-  * @brief    å‘½ä»¤åŒ¹é…ï¼Œæ ¹æ® cmd æ‰¾åˆ°å¯¹åº”çš„æ§åˆ¶å—
-  * @param    cmdindex : å‘½ä»¤å·
-  * @param    root     : æ£€ç´¢æ ¹ï¼Œèµ·å§‹æ£€ç´¢ç‚¹
-  * @return   è¿”å› cmd å‘½ä»¤å­—ç¬¦ä¸²å¯¹åº”çš„æ§åˆ¶å—
+  * @brief    ÃüÁîÆ¥Åä£¬¸ù¾İ cmd ÕÒµ½¶ÔÓ¦µÄ¿ØÖÆ¿é
+  * @param    cmdindex : ÃüÁîºÅ
+  * @param    root     : ¼ìË÷¸ù£¬ÆğÊ¼¼ìË÷µã
+  * @return   ·µ»Ø cmd ÃüÁî×Ö·û´®¶ÔÓ¦µÄ¿ØÖÆ¿é
 */
-static struct shellcommand *shell_search_cmd(cmd_root_t * root , unsigned int cmdindex)
+static struct shellcommand *shell_search_cmd(cmd_root_t * root , uint32_t cmdindex)
 {
 	struct shellcommand * command ;
 	cmd_entry_t *node = ROOT(root);
@@ -154,21 +157,19 @@ static struct shellcommand *shell_search_cmd(cmd_root_t * root , unsigned int cm
 	return NULL;
 }
 
-
-
 /**
-  * @brief    æ–°å‘½ä»¤æ’å…¥è®°å½•
-  * @param    root     : æ£€ç´¢æ ¹ï¼Œèµ·å§‹æ£€ç´¢ç‚¹
-  * @param    newcmd   : æ–°å‘½ä»¤æ§åˆ¶å—
-  * @return   æˆåŠŸè¿”å› 0
+  * @brief    ĞÂÃüÁî²åÈë¼ÇÂ¼
+  * @param    root     : ¼ìË÷¸ù£¬ÆğÊ¼¼ìË÷µã
+  * @param    newcmd   : ĞÂÃüÁî¿ØÖÆ¿é
+  * @return   ³É¹¦·µ»Ø 0
 */
-static int shell_insert_cmd(cmd_root_t * root , struct shellcommand * newcmd)
+static int32_t shell_insert_cmd(cmd_root_t * root , struct shellcommand * newcmd)
 {
 	struct shellcommand * command ;
 	cmd_entry_t **node = &ROOT(root) ;
 
 	#if USE_AVL_TREE 
-		/* ç”¨å¹³è¡¡äºŒå‰æ ‘æ„å»ºæŸ¥è¯¢ç³»ç»Ÿ */
+		/* ÓÃÆ½ºâ¶ş²æÊ÷¹¹½¨²éÑ¯ÏµÍ³ */
 		cmd_entry_t *parent = NULL;
 
 		/* Figure out where to put new node */
@@ -187,7 +188,7 @@ static int shell_insert_cmd(cmd_root_t * root , struct shellcommand * newcmd)
 		/* Add new node and rebalance tree. */
 		avl_insert(root,&newcmd->node,parent,node);
 	#else 
-		/* ç”¨å•é“¾è¡¨æ„å»ºæŸ¥è¯¢ç³»ç»Ÿ */
+		/* ÓÃµ¥Á´±í¹¹½¨²éÑ¯ÏµÍ³ */
 		for ( ; *node ; node = &((*node)->next) ) {
 			command = container_of(*node, struct shellcommand, node);
 			if (newcmd->ID == command->ID) 
@@ -204,27 +205,27 @@ static int shell_insert_cmd(cmd_root_t * root , struct shellcommand * newcmd)
 
 
 /** 
-  * @brief  æ£€å‡ºå‘½ä»¤èµ·å§‹å­—ç¬¦ä¸²ä¸º str çš„æ‰€æœ‰å‘½ä»¤ 
-  * @param  str      : èµ·å§‹å­—ç¬¦ä¸²
-  * @param  len      : èµ·å§‹å­—ç¬¦ä¸²é•¿åº¦
-  * @param  checkout : æ£€å‡ºå†…å­˜
-  * @param  checkmax : æœ€å¤§æ£€å‡ºæ•°ï¼Œå¦‚æœè¶…å‡ºæ­¤æ•°åˆ™è¿”å› 0 
-  * @return è¿”å›æ£€å‡ºå‘½ä»¤çš„æ¡ç›®æ•°
+  * @brief  ¼ì³öÃüÁîÆğÊ¼×Ö·û´®Îª str µÄËùÓĞÃüÁî 
+  * @param  str      : ÆğÊ¼×Ö·û´®
+  * @param  len      : ÆğÊ¼×Ö·û´®³¤¶È
+  * @param  checkout : ¼ì³öÄÚ´æ
+  * @param  checkmax : ×î´ó¼ì³öÊı£¬Èç¹û³¬³ö´ËÊıÔò·µ»Ø 0 
+  * @return ·µ»Ø¼ì³öÃüÁîµÄÌõÄ¿Êı
 */
-static int checkout(char * str,int len,struct shellcommand ** checkout , int checkmax)
+static int32_t checkout(char * str,int32_t len,struct shellcommand ** checkout , int32_t checkmax)
 {
-	unsigned int index , end;
-	int      matchnums = 0;
+	uint32_t index , end;
+	int32_t      matchnums = 0;
 	struct shellcommand * shellcmd = NULL;
 	cmd_entry_t  * node = ROOT(&shellcmdroot);
 
-	/* é¦–å­—æ¯ç›¸åŒå¹¶ä¸”é•¿åº¦ä¸å°äº len çš„ç‚¹ä½œä¸ºèµ·å§‹ç‚¹ï¼Œä¸‹ä¸€ä¸ªå­—æ¯å¼€å¤´çš„ç‚¹ä½œä¸ºç»“æŸç‚¹ */
-	index = ((unsigned int)(*str)<<26) | (len << 21) ;
-	end = (unsigned int)(*str + 1)<<26 ; 
+	/* Ê××ÖÄ¸ÏàÍ¬²¢ÇÒ³¤¶È²»Ğ¡ÓÚ len µÄµã×÷ÎªÆğÊ¼µã£¬ÏÂÒ»¸ö×ÖÄ¸¿ªÍ·µÄµã×÷Îª½áÊøµã */
+	index = ((uint32_t)(*str)<<26) | (len << 21) ;
+	end = (uint32_t)(*str + 1)<<26 ; 
 
-	/* å…ˆæ‰¾åˆ°èµ·å§‹åŒ¹é…ç‚¹ */
+	/* ÏÈÕÒµ½ÆğÊ¼Æ¥Åäµã */
 	#if USE_AVL_TREE 
-		/* index ä¸å­˜åœ¨ï¼ŒæŸ¥æ‰¾ç»“æŸåçš„ shell_cmd æœ€é è¿‘ index ç”¨æ­¤ä½œä¸ºèµ·å§‹åŒ¹é…ç‚¹ */
+		/* index ²»´æÔÚ£¬²éÕÒ½áÊøºóµÄ shell_cmd ×î¿¿½ü index ÓÃ´Ë×÷ÎªÆğÊ¼Æ¥Åäµã */
 		while ( node ){
 			shellcmd = container_of(node,struct shellcommand, node);	
 			node = (index < shellcmd->ID) ? node->avl_left : node->avl_right;
@@ -233,7 +234,7 @@ static int checkout(char * str,int len,struct shellcommand ** checkout , int che
 		if (shellcmd)
 		   node = &shellcmd->node ;
 	#else 
-		/* æŸ¥æ‰¾åˆ°é¦–å­—æ¯ç›¸åŒçš„ç‚¹ä½œä¸ºèµ·å§‹ç‚¹ */
+		/* ²éÕÒµ½Ê××ÖÄ¸ÏàÍ¬µÄµã×÷ÎªÆğÊ¼µã */
 		for ( ; node ; node = NEXT(node)) { 
 			shellcmd = container_of(node, struct shellcommand, node);
 			if (shellcmd->ID > index)
@@ -242,7 +243,7 @@ static int checkout(char * str,int len,struct shellcommand ** checkout , int che
 	#endif
 
 	for( ; node ; node = NEXT(node) ) {
-		/* å¯¹æ¯”è¾“å…¥çš„å­—ç¬¦ä¸²ï¼Œå¦‚æœå‰ len ä¸ªå­—ç¬¦ä¸ str ç›¸åŒ,æŠŠå‘½ä»¤å—è®°ä¸‹æ¥ */
+		/* ¶Ô±ÈÊäÈëµÄ×Ö·û´®£¬Èç¹ûÇ° len ¸ö×Ö·ûÓë str ÏàÍ¬,°ÑÃüÁî¿é¼ÇÏÂÀ´ */
 		shellcmd = container_of(node,struct shellcommand, node);
 		if (shellcmd->ID > end) {
 			break ;
@@ -260,13 +261,13 @@ static int checkout(char * str,int len,struct shellcommand ** checkout , int che
 }
 
 
-#if (COMMANDLINE_MAX_RECORD) //å¦‚æœå®šä¹‰äº†å†å²çºªå½•
+#if (COMMANDLINE_MAX_RECORD) //Èç¹û¶¨ÒåÁËÀúÊ·¼ÍÂ¼
 
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    è®°å½•æ­¤æ¬¡è¿è¡Œçš„å‘½ä»¤åŠå‚æ•°
+  * @author   ¹ÅÃ´Äş
+  * @brief    ¼ÇÂ¼´Ë´ÎÔËĞĞµÄÃüÁî¼°²ÎÊı
   * @param    
-  * @return   è¿”å›è®°å½•åœ°å€
+  * @return   ·µ»Ø¼ÇÂ¼µØÖ·
 */
 static char * shell_record(struct shell_input * shellin)
 {	
@@ -283,42 +284,42 @@ static char * shell_record(struct shell_input * shellin)
 
 
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    æŒ‰ä¸Šä¸‹ç®­å¤´é”®æ˜¾ç¤ºä»¥å¾€è¾“å…¥è¿‡çš„å‘½ä»¤ï¼Œæ­¤å¤„åªè®°å½•æœ€è¿‘å‡ æ¬¡çš„å‘½ä»¤
+  * @author   ¹ÅÃ´Äş
+  * @brief    °´ÉÏÏÂ¼ıÍ·¼üÏÔÊ¾ÒÔÍùÊäÈë¹ıµÄÃüÁî£¬´Ë´¦Ö»¼ÇÂ¼×î½ü¼¸´ÎµÄÃüÁî
   * @param    void
   * @return   don't care
 */
-static void shell_show_history(struct shell_input * shellin,int LastOrNext)
+static void shell_show_history(struct shell_input * shellin,int32_t LastOrNext)
 {
-	int len = 0;
+	int32_t len = 0;
 	
-	printk("\33[2K\r%s",shellin->sign);//"\33[2K\r" è¡¨ç¤ºæ¸…é™¤å½“å‰è¡Œ
+	printf("\33[2K\r%s",shellin->sign);//"\33[2K\r" ±íÊ¾Çå³ıµ±Ç°ĞĞ
 
-	if (!LastOrNext) //ä¸Šç®­å¤´ï¼Œä¸Šä¸€æ¡å‘½ä»¤
+	if (!LastOrNext) //ÉÏ¼ıÍ·£¬ÉÏÒ»ÌõÃüÁî
 		shellin->htyread = (!shellin->htyread) ? (COMMANDLINE_MAX_RECORD - 1) : (shellin->htyread - 1);
-	else       //ä¸‹ç®­å¤´
+	else       //ÏÂ¼ıÍ·
 	if (shellin->htyread != shellin->htywrt)
 		shellin->htyread = (shellin->htyread + 1) % COMMANDLINE_MAX_RECORD;
 
-	if (shellin->htyread != shellin->htywrt){ //æŠŠå†å²è®°å½•è€ƒåˆ°å‘½ä»¤è¡Œå†…å­˜ 
+	if (shellin->htyread != shellin->htywrt){ //°ÑÀúÊ·¼ÇÂ¼¿¼µ½ÃüÁîĞĞÄÚ´æ 
 		for (char * history = &shellin->history[shellin->htyread][0]; *history ; ++len)
 			shellin->cmdline[len] = *history++;
 	}
 	
-	shellin->cmdline[len] = 0; //æ·»åŠ ç»“æŸç¬¦
+	shellin->cmdline[len] = 0; //Ìí¼Ó½áÊø·û
 	shellin->tail = len ;
 	shellin->edit = len ;
 
 	if (len)
-		printl(shellin->cmdline,len); //æ‰“å°å‘½ä»¤è¡Œå†…å®¹
+		printl(shellin->cmdline,len); //´òÓ¡ÃüÁîĞĞÄÚÈİ
 }
 
-#endif //#if (COMMANDLINE_MAX_RECORD) //å¦‚æœå®šä¹‰äº†å†å²çºªå½•
+#endif //#if (COMMANDLINE_MAX_RECORD) //Èç¹û¶¨ÒåÁËÀúÊ·¼ÍÂ¼
 
 
 
 /** 
-  * @brief    è¾“å…¥ table é”®å¤„ç†
+  * @brief    ÊäÈë table ¼ü´¦Àí
   * @param    input
   * @return   don't care
 */
@@ -326,8 +327,8 @@ static void shell_tab(struct shell_input * shellin)
 {
 	struct shellcommand * match[10];  
 	char  *  str = shellin->cmdline;
-	int  len = shellin->tail;
-	int matchnums = 0 ; 
+	int32_t  len = shellin->tail;
+	int32_t matchnums = 0 ; 
 	
 	/* Shave off any leading spaces */
 	for ( ; *str == ' ' ; ++str) {
@@ -338,35 +339,35 @@ static void shell_tab(struct shell_input * shellin)
 		return ;
 	}
 
-	/* å¦‚æœæ²¡æœ‰å‘½ä»¤åŒ…å«è¾“å…¥çš„å­—ç¬¦ä¸²ï¼Œè¿”å› */
+	/* Èç¹ûÃ»ÓĞÃüÁî°üº¬ÊäÈëµÄ×Ö·û´®£¬·µ»Ø */
 	matchnums = checkout(str,len,match,10);
 	if (!matchnums){ 
 		return ; 
 	}
 
-	/* å¦‚æœç¼–è¾‘ä½ç½®ä¸æ˜¯æœ«ç«¯ï¼Œå…ˆæŠŠå…‰æ ‡ç§»åˆ°æœ«ç«¯ */
+	/* Èç¹û±à¼­Î»ÖÃ²»ÊÇÄ©¶Ë£¬ÏÈ°Ñ¹â±êÒÆµ½Ä©¶Ë */
 	if (shellin->edit != shellin->tail) { 
 		printl(&shellin->cmdline[shellin->edit],shellin->tail - shellin->edit);
 		shellin->edit = shellin->tail;
 	}
 
 	if (1 == matchnums){
-		/* å¦‚æœåªæ‰¾åˆ°äº†ä¸€æ¡å‘½ä»¤åŒ…å«å½“å‰è¾“å…¥çš„å­—ç¬¦ä¸²ï¼Œç›´æ¥è¡¥å…¨å‘½ä»¤å¹¶æ‰“å° */
+		/* Èç¹ûÖ»ÕÒµ½ÁËÒ»ÌõÃüÁî°üº¬µ±Ç°ÊäÈëµÄ×Ö·û´®£¬Ö±½Ó²¹È«ÃüÁî²¢´òÓ¡ */
 		for(char * fmt = match[0]->name + len ; *fmt ;++fmt){
 			shell_getchar(shellin,*fmt);
 		}
 		shell_getchar(shellin,' ');
 	}
 	else {  
-		/* å¦‚æœä¸æ­¢ä¸€æ¡å‘½ä»¤åŒ…å«å½“å‰è¾“å…¥çš„å­—ç¬¦ä¸²ï¼Œæ‰“å°å«æœ‰ç›¸åŒ
-		  å­—ç¬¦çš„å‘½ä»¤åˆ—è¡¨ï¼Œå¹¶è¡¥å…¨å­—ç¬¦ä¸²è¾“å‡ºç›´åˆ°å‘½ä»¤åŒºåˆ†ç‚¹ */
+		/* Èç¹û²»Ö¹Ò»ÌõÃüÁî°üº¬µ±Ç°ÊäÈëµÄ×Ö·û´®£¬´òÓ¡º¬ÓĞÏàÍ¬
+		  ×Ö·ûµÄÃüÁîÁĞ±í£¬²¢²¹È«×Ö·û´®Êä³öÖ±µ½ÃüÁîÇø·Öµã */
 		for(int i = 0;i < matchnums; ++i) {
-			printk("\r\n\t%s",match[i]->name); 
+			printf("\r\n\t%s",match[i]->name); 
 		}
 
-		printk("\r\n%s%s",shellin->sign,shellin->cmdline); 
+		printf("\r\n%s%s",shellin->sign,shellin->cmdline); 
 		for ( ; ; ) {
-			/* æŠŠ match[] ä¸­å«æœ‰ç›¸åŒçš„å­—ç¬¦è¡¥å…¨åˆ°è¾“å…¥ç¼“å†²ä¸­ */
+			/* °Ñ match[] ÖĞº¬ÓĞÏàÍ¬µÄ×Ö·û²¹È«µ½ÊäÈë»º³åÖĞ */
 			for (int i = 1 ; i < matchnums ; ++i ) {
 				if (match[0]->name[len] != match[i]->name[len]){
 					return  ;
@@ -379,39 +380,39 @@ static void shell_tab(struct shell_input * shellin)
 
 
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    å¦‚æœå½“å‰æ‰“å°è¡Œæœ‰è¾“å…¥å†…å®¹ï¼Œå›é€€ä¸€ä¸ªé”®ä½
-  * @param    shellin : è¾“å…¥äº¤äº’
+  * @author   ¹ÅÃ´Äş
+  * @brief    Èç¹ûµ±Ç°´òÓ¡ĞĞÓĞÊäÈëÄÚÈİ£¬»ØÍËÒ»¸ö¼üÎ»
+  * @param    shellin : ÊäÈë½»»¥
   * @return   don't care
 */
 static void shell_backspace(struct shell_input * shellin)
 {
-	char   printbuf[COMMANDLINE_MAX_LEN*2]={0};//ä¸­è½¬å†…å­˜
+	char   printbuf[COMMANDLINE_MAX_LEN*2]={0};//ÖĞ×ªÄÚ´æ
 	char * print = &printbuf[1];
 	char * printend = print + (shellin->tail - shellin->edit) + 1;
 	char * edit = &shellin->cmdline[shellin->edit--] ;
 	char * tail = &shellin->cmdline[shellin->tail--];
 
-	/* å½“è¾“å…¥è¿‡å·¦å³ç®­å¤´æ—¶ï¼Œéœ€è¦ä½œå­—ç¬¦ä¸²æ’å…¥å·¦ç§»å¤„ç†ï¼Œå¹¶ä½œåé¦ˆå›æ˜¾
-	   å¦‚ abUcd ä¸­åˆ é™¤Uï¼Œéœ€è¦å·¦ç§»cdï¼Œå¹¶æ‰“å°ä¸¤ä¸ª '\b' ä½¿å…‰æ ‡å›åˆ° ab å¤„ */
+	/* µ±ÊäÈë¹ı×óÓÒ¼ıÍ·Ê±£¬ĞèÒª×÷×Ö·û´®²åÈë×óÒÆ´¦Àí£¬²¢×÷·´À¡»ØÏÔ
+	   Èç abUcd ÖĞÉ¾³ıU£¬ĞèÒª×óÒÆcd£¬²¢´òÓ¡Á½¸ö '\b' Ê¹¹â±ê»Øµ½ ab ´¦ */
 	for (char * cp = edit - 1 ; edit < tail ; *cp++ = *edit++) {
 		*print++ = *edit;
 		*printend++ = '\b';
 	}
 
 	printbuf[0] = '\b';
-	*print = ' ';       //è¦†ç›–æœ€åä¸€ä¸ªå­—ç¬¦æ˜¾ç¤º
-	*printend++ = '\b'; //å…‰æ ‡å›æ˜¾
+	*print = ' ';       //¸²¸Ç×îºóÒ»¸ö×Ö·ûÏÔÊ¾
+	*printend++ = '\b'; //¹â±ê»ØÏÔ
 
-	shellin->cmdline[shellin->tail] = 0;  //æœ«ç«¯æ·»åŠ å­—ç¬¦ä¸²ç»“æŸç¬¦
+	shellin->cmdline[shellin->tail] = 0;  //Ä©¶ËÌí¼Ó×Ö·û´®½áÊø·û
 	printl(printbuf,printend-printbuf);
 }
 
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    å‘½ä»¤è¡Œè®°å½•è¾“å…¥ä¸€ä¸ªå­—ç¬¦
-  * @param    shellin : è¾“å…¥äº¤äº’
-  * @param    ascii   : é”®ç›˜è¾“å…¥å­—ç¬¦
+  * @author   ¹ÅÃ´Äş
+  * @brief    ÃüÁîĞĞ¼ÇÂ¼ÊäÈëÒ»¸ö×Ö·û
+  * @param    shellin : ÊäÈë½»»¥
+  * @param    ascii   : ¼üÅÌÊäÈë×Ö·û
   * @return   don't care
 */
 static void shell_getchar(struct shell_input * shellin , char ascii)
@@ -426,21 +427,21 @@ static void shell_getchar(struct shell_input * shellin , char ascii)
 		printl(&ascii,1);
 	}
 	else {
-		/* å…¶å® else åˆ†æ”¯å®Œå…¨å¯ä»¥å¤„ç† tail == edit çš„æƒ…å†µ */
+		/* ÆäÊµ else ·ÖÖ§ÍêÈ«¿ÉÒÔ´¦Àí tail == edit µÄÇé¿ö */
 		char  printbuf[COMMANDLINE_MAX_LEN*2]={0};
 		char *tail = &shellin->cmdline[shellin->tail++];
 		char *edit = &shellin->cmdline[shellin->edit++];
 		char *print = printbuf + (tail - edit);
 		char *printend = print + 1;
 
-		/* å½“è¾“å…¥è¿‡å·¦å³ç®­å¤´æ—¶ï¼Œéœ€è¦ä½œå­—ç¬¦ä¸²æ’å…¥å³ç§»å¤„ç†ï¼Œå¹¶ä½œåé¦ˆå›æ˜¾
-		   å¦‚ abcd ä¸­åœ¨bcæ’å…¥Uï¼Œéœ€è¦å³ç§»cdï¼Œå¹¶æ‰“å°ä¸¤ä¸ª '\b' ä½¿å…‰æ ‡å›åˆ° abU å¤„ */
+		/* µ±ÊäÈë¹ı×óÓÒ¼ıÍ·Ê±£¬ĞèÒª×÷×Ö·û´®²åÈëÓÒÒÆ´¦Àí£¬²¢×÷·´À¡»ØÏÔ
+		   Èç abcd ÖĞÔÚbc²åÈëU£¬ĞèÒªÓÒÒÆcd£¬²¢´òÓ¡Á½¸ö '\b' Ê¹¹â±ê»Øµ½ abU ´¦ */
 		for (char *cp = tail - 1; cp >= edit ; *tail-- = *cp--) {
 			*print-- = *cp;
 			*printend++ = '\b';
 		}
 
-		/* æ’å…¥å­—ç¬¦ */
+		/* ²åÈë×Ö·û */
 		*print = ascii; 
 		*edit  = ascii;
 		shellin->cmdline[shellin->tail] = 0 ;
@@ -448,22 +449,20 @@ static void shell_getchar(struct shell_input * shellin , char ascii)
 	}
 }
 
-
-
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    å‘½ä»¤è¡Œè§£æè¾“å…¥
-  * @param    cmdroot : æ£€ç´¢æ ¹ï¼Œèµ·å§‹æ£€ç´¢ç‚¹
-  * @param    shellin : è¾“å…¥äº¤äº’
+  * @author   ¹ÅÃ´Äş
+  * @brief    ÃüÁîĞĞ½âÎöÊäÈë
+  * @param    cmdroot : ¼ìË÷¸ù£¬ÆğÊ¼¼ìË÷µã
+  * @param    shellin : ÊäÈë½»»¥
   * @return   don't care
 */
 static void shell_parse(cmd_root_t * cmdroot , struct shell_input * shellin)
 {
 	union uncmd unCmd ;
-	unsigned int len = 0;
-	unsigned int sum = 0;
-	unsigned int fcrc8 = 0;
-	unsigned int bcrc8 = 0;
+	uint32_t len = 0;
+	uint32_t sum = 0;
+	uint32_t fcrc8 = 0;
+	uint32_t bcrc8 = 0;
 	char  *  str = shellin->cmdline;
 	struct shellcommand * cmdmatch;
 
@@ -487,7 +486,7 @@ static void shell_parse(cmd_root_t * cmdroot , struct shell_input * shellin)
 
 	cmdmatch = shell_search_cmd(cmdroot,unCmd.ID);
 	if (cmdmatch != NULL) {
-		/* åˆ¤æ–­æ˜¯å¦ä¸ºæœ‰é€‰é¡¹çš„å‘½ä»¤ */
+		/* ÅĞ¶ÏÊÇ·ñÎªÓĞÑ¡ÏîµÄÃüÁî */
 		shellcfm_t * confirm ;
 		confirm = container_of(cmdmatch, struct shellconfirm, cmd);
 		if (confirm->flag == CONFIRM_FLAG) {
@@ -498,109 +497,72 @@ static void shell_parse(cmd_root_t * cmdroot , struct shell_input * shellin)
 		}
 	}
 	else {
-		printk("\r\n\tno reply:%s\r\n",shellin->cmdline);
+		printf("\r\n\tno reply:%s\r\n",shellin->cmdline);
 	}
 	
 PARSE_END:
-	shellin->tail = 0;//æ¸…ç©ºå½“å‰å‘½ä»¤è¡Œè¾“å…¥
+	shellin->tail = 0;//Çå¿Õµ±Ç°ÃüÁîĞĞÊäÈë
 	shellin->edit = 0;
 	return ;
 }
 
 /**
-  * @brief    æ§åˆ¶å°æ¸…å±
-  * @param    arg  : å‘½ä»¤è¡Œå†…å­˜
+  * @brief    ¿ØÖÆÌ¨ÇåÆÁ
+  * @param    arg  : ÃüÁîĞĞÄÚ´æ
   * @return   don't care
 */
 static void shell_clean_screen(void * arg)
 {
 	struct shell_input * shellin ; 
 	shellin = container_of(arg, struct shell_input, cmdline);
-	printk("\033[2J\033[%d;%dH%s",0,0,shellin->sign);
+	printf("\033[2J\033[%ld;%ldH%s",(int32_t)0,(int32_t)0,shellin->sign);
 	return ;
 }
 
-
-
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    æ˜¾ç¤ºæ‰€æœ‰æ³¨å†Œäº†çš„å‘½ä»¤
-  * @param    arg  : å‘½ä»¤è¡Œå†…å­˜
+  * @author   ¹ÅÃ´Äş
+  * @brief    ÏÔÊ¾ËùÓĞ×¢²áÁËµÄÃüÁî
+  * @param    arg  : ÃüÁîĞĞÄÚ´æ
   * @return   don't care
 */
 static void shell_list_cmd(void * arg)
 {
 	struct shell_input * shellin ;
 	struct shellcommand * cmd;
-	unsigned int firstchar = 0;
+	uint32_t firstchar = 0;
 	cmd_entry_t  * node ;
 	
 	for (node = FIRST(&shellcmdroot) ; node; node = NEXT(node)){
 		cmd = container_of(node,struct shellcommand, node);
 		if (firstchar != (cmd->ID & 0xfc000000)) {
 			firstchar = cmd->ID & 0xfc000000;
-			printk("\r\n(%c)------",((firstchar>>26)|0x40));
+			printf("\r\n(%c)------",(char)((firstchar>>26)|0x40));
 		}
-		printk("\r\n\t%s", cmd->name);
+		printf("\r\n\t%s", cmd->name);
 	}
 
 	shellin = container_of(arg, struct shell_input, cmdline);
-	printk("\r\n\r\n%s",shellin->sign);
+	printf("\r\n\r\n%s",shellin->sign);
 }
 
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    æ˜¾ç¤ºæ‰€æœ‰æ³¨å†Œäº†çš„å‘½ä»¤
-  * @param    arg  : å‘½ä»¤è¡Œå†…å­˜
-  * @return   don't care
-*/
-static void shell_version(void * arg)
-{
-	printk("\r\n\t%s\r\n",VERSION);
-}
-
-/**
-  * @brief  è·å– debug ä¿¡æ¯
-  * @param  arg  : å‘½ä»¤è¡Œå†…å­˜
-  * @return don't care
-*/
-static void shell_debug_stream(void * arg)
-{
-	static const char closemsg[] = "\r\n\tclose debug information stream\r\n\r\n";
-	static const char openmsg[] = "\r\n\tget debug information\r\n\r\n";
-	int option;
-	int argc = cmdline_param(arg,&option,1);
-	
-	if ((argc > 0) && (option == 0)) { 
-		/* å…³é—­è°ƒè¯•ä¿¡æ¯æ‰“å°æµï¼Œä»…æ˜¾ç¤ºäº¤äº’ä¿¡æ¯ */
-		current_puts((char*)closemsg,sizeof(closemsg) - 1);
-		default_puts = NULL;  
-	}
-	else {
-		/* è®¾ç½®å½“å‰äº¤äº’ä¸ºä¿¡æ¯æµè¾“å‡º */
-		current_puts((char*)openmsg,sizeof(openmsg) - 1);
-		default_puts = current_puts;
-	}
-}
-
-/**
-  * @author   å¤ä¹ˆå®
-  * @brief    æ³¨å†Œä¸€ä¸ªå‘½ä»¤å·å’Œå¯¹åº”çš„å‘½ä»¤å‡½æ•° 
-  * @note     å‰ç¼€ä¸º '_' è¡¨ç¤ºä¸å»ºè®®ç›´æ¥è°ƒç”¨æ­¤å‡½æ•°
-  * @param    cmd_name : å‘½ä»¤å
-  * @param    cmd_func : å‘½ä»¤åå¯¹åº”çš„æ‰§è¡Œå‡½æ•°
-  * @param    newcmd   : å‘½ä»¤æ§åˆ¶å—å¯¹åº”çš„æŒ‡é’ˆ
-  * @param    confirm  : å‘½ä»¤æ˜¯å¦éœ€è¦ç¡®è®¤ä¿¡æ¯
+  * @author   ¹ÅÃ´Äş
+  * @brief    ×¢²áÒ»¸öÃüÁîºÅºÍ¶ÔÓ¦µÄÃüÁîº¯Êı 
+  * @note     Ç°×ºÎª '_' ±íÊ¾²»½¨ÒéÖ±½Óµ÷ÓÃ´Ëº¯Êı
+  * @param    cmd_name : ÃüÁîÃû
+  * @param    cmd_func : ÃüÁîÃû¶ÔÓ¦µÄÖ´ĞĞº¯Êı
+  * @param    newcmd   : ÃüÁî¿ØÖÆ¿é¶ÔÓ¦µÄÖ¸Õë
+  * @param    confirm  : ÃüÁîÊÇ·ñĞèÒªÈ·ÈÏĞÅÏ¢
   * @return   don't care
 */
 void _shell_register(struct shellcommand * newcmd,char * cmd_name, cmd_fn_t cmd_func)
 {
 	char * str = cmd_name;
 	union uncmd unCmd ;
-	unsigned int clen;
-	unsigned int fcrc8 = 0;
-	unsigned int bcrc8 = 0;
-	unsigned int sum = 0;
+	uint32_t clen;
+	uint32_t fcrc8 = 0;
+	uint32_t bcrc8 = 0;
+	uint32_t sum = 0;
 
 	for (clen = 0; *str ; ++clen,++str) {
 		sum += *str;
@@ -614,32 +576,32 @@ void _shell_register(struct shellcommand * newcmd,char * cmd_name, cmd_fn_t cmd_
 	unCmd.part.Sum = sum;
 	unCmd.part.FirstChar = *cmd_name;
 	
-	newcmd->ID = unCmd.ID;   //ç”Ÿæˆå‘½ä»¤ç 
+	newcmd->ID = unCmd.ID;   //Éú³ÉÃüÁîÂë
 	newcmd->name = cmd_name;
 	newcmd->func = cmd_func;
 	shell_insert_cmd(&shellcmdroot,newcmd);
 }
 
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    æŠŠ "a b c d" æ ¼å¼åŒ–æå–ä¸º char*argv[] = {"a","b","c","d"};
-  * @note     ä¸€èˆ¬ä¾› getopt() è§£æï¼Œè¿è¡Œè¿‡åå‘½ä»¤è¡Œå†…å®¹å°†è¢«æ•´æ”¹
-  * @param    str    : å‘½ä»¤å­—ç¬¦ä¸²åé¢æ‰€è·Ÿå‚æ•°ç¼“å†²åŒºæŒ‡é’ˆ
-  * @param    argv   : æ•°æ®è½¬æ¢åç¼“å­˜åœ°å€
-  * @param    maxread: æœ€å¤§è¯»å–æ•°
-  * @return   æœ€ç»ˆè¯»å–å‚æ•°ä¸ªæ•°è¾“å‡º
+  * @author   ¹ÅÃ´Äş
+  * @brief    °Ñ "a b c d" ¸ñÊ½»¯ÌáÈ¡Îª char*argv[] = {"a","b","c","d"};
+  * @note     Ò»°ã¹© getopt() ½âÎö£¬ÔËĞĞ¹ıºóÃüÁîĞĞÄÚÈİ½«±»Õû¸Ä
+  * @param    str    : ÃüÁî×Ö·û´®ºóÃæËù¸ú²ÎÊı»º³åÇøÖ¸Õë
+  * @param    argv   : Êı¾İ×ª»»ºó»º´æµØÖ·
+  * @param    maxread: ×î´ó¶ÁÈ¡Êı
+  * @return   ×îÖÕ¶ÁÈ¡²ÎÊı¸öÊıÊä³ö
 */
 int cmdline_strtok(char * str ,char ** argv ,int maxread)
 {
 	int argc = 0;
 
-	for ( ; ' ' == *str ; ++str) ; //è·³è¿‡ç©ºæ ¼
+	for ( ; ' ' == *str ; ++str) ; //Ìø¹ı¿Õ¸ñ
 	
-	for ( ; *str && argc < maxread; ++argc,++argv ) { //å­—ç¬¦ä¸ä¸º â€˜\0' çš„æ—¶å€™
+	for ( ; *str && argc < maxread; ++argc,++argv ) { //×Ö·û²»Îª ¡®\0' µÄÊ±ºò
 	
-		for (*argv = str ; ' ' != *str && *str ; ++str);//è®°å½•è¿™ä¸ªå‚æ•°ï¼Œç„¶åè·³è¿‡éç©ºå­—ç¬¦
+		for (*argv = str ; ' ' != *str && *str ; ++str);//¼ÇÂ¼Õâ¸ö²ÎÊı£¬È»ºóÌø¹ı·Ç¿Õ×Ö·û
 		
-		for ( ; ' ' == *str; *str++ = '\0');//æ¯ä¸ªå‚æ•°åŠ å­—ç¬¦ä¸²ç»“æŸç¬¦ï¼Œè·³è¿‡ç©ºæ ¼		
+		for ( ; ' ' == *str; *str++ = '\0');//Ã¿¸ö²ÎÊı¼Ó×Ö·û´®½áÊø·û£¬Ìø¹ı¿Õ¸ñ		
 	}
 	
 	return argc;
@@ -647,34 +609,34 @@ int cmdline_strtok(char * str ,char ** argv ,int maxread)
 
 
 /**
-  * @brief    è½¬æ¢è·å–å‘½ä»¤å·åé¢çš„è¾“å…¥å‚æ•°ï¼Œå­—ç¬¦ä¸²è½¬ä¸ºæ•´æ•°
-  * @param    str     å‘½ä»¤å­—ç¬¦ä¸²åé¢æ‰€è·Ÿå‚æ•°ç¼“å†²åŒºæŒ‡é’ˆ
-  * @param    argv    æ•°æ®è½¬æ¢åç¼“å­˜åœ°å€
-  * @param    maxread æœ€å¤§è¯»å–æ•°
-  * @return   æ•°æ®ä¸ªæ•°
-	  * @retval   >= 0         è¯»å–å‘½ä»¤åé¢æ‰€è·Ÿå‚æ•°ä¸ªæ•°
-	  * @retval   PARAMETER_ERROR(-2)  å‘½ä»¤åé¢æ‰€è·Ÿå‚æ•°æœ‰è¯¯
-	  * @retval   PARAMETER_HELP(-1)   å‘½ä»¤åé¢è·Ÿäº† ? å·
+  * @brief    ×ª»»»ñÈ¡ÃüÁîºÅºóÃæµÄÊäÈë²ÎÊı£¬×Ö·û´®×ªÎªÕûÊı
+  * @param    str     ÃüÁî×Ö·û´®ºóÃæËù¸ú²ÎÊı»º³åÇøÖ¸Õë
+  * @param    argv    Êı¾İ×ª»»ºó»º´æµØÖ·
+  * @param    maxread ×î´ó¶ÁÈ¡Êı
+  * @return   Êı¾İ¸öÊı
+	  * @retval   >= 0         ¶ÁÈ¡ÃüÁîºóÃæËù¸ú²ÎÊı¸öÊı
+	  * @retval   PARAMETER_ERROR(-2)  ÃüÁîºóÃæËù¸ú²ÎÊıÓĞÎó
+	  * @retval   PARAMETER_HELP(-1)   ÃüÁîºóÃæ¸úÁË ? ºÅ
 */
 int cmdline_param(char * str,int * argv,int maxread)
 {
 	int argc ;
 	unsigned int  value;
 
-	for ( ; ' ' == *str        ; ++str);//è·³è¿‡ç©ºæ ¼
-	for ( ; ' ' != *str && *str; ++str);//è·³è¿‡ç¬¬ä¸€ä¸ªå‚æ•°
-	for ( ; ' ' == *str        ; ++str);//è·³è¿‡ç©ºæ ¼
+	for ( ; ' ' == *str        ; ++str);//Ìø¹ı¿Õ¸ñ
+	for ( ; ' ' != *str && *str; ++str);//Ìø¹ıµÚÒ»¸ö²ÎÊı
+	for ( ; ' ' == *str        ; ++str);//Ìø¹ı¿Õ¸ñ
 
 	if (*str == '?')
-		return PARAMETER_HELP;//å¦‚æœå‘½ä»¤åé¢çš„æ˜¯é—®å·ï¼Œè¿”å›help
+		return PARAMETER_HELP;//Èç¹ûÃüÁîºóÃæµÄÊÇÎÊºÅ£¬·µ»Øhelp
 
-	for (argc = 0; *str && argc < maxread; ++argc , ++argv) { //å­—ç¬¦ä¸ä¸º â€˜\0' çš„æ—¶å€™
+	for (argc = 0; *str && argc < maxread; ++argc , ++argv) { //×Ö·û²»Îª ¡®\0' µÄÊ±ºò
 	
 		*argv = 0;
 		
-		if ('0' == str[0] && 'x' == str[1]) { //"0x" å¼€å¤´ï¼Œåå…­è¿›åˆ¶è½¬æ¢
+		if ('0' == str[0] && 'x' == str[1]) { //"0x" ¿ªÍ·£¬Ê®Áù½øÖÆ×ª»»
 			for ( str += 2 ;  ; ++str )  {
-				if ( (value = *str - '0') < 10 ) // value å…ˆèµ‹å€¼ï¼Œååˆ¤æ–­ 
+				if ( (value = *str - '0') < 10 ) // value ÏÈ¸³Öµ£¬ºóÅĞ¶Ï 
 					*argv = (*argv << 4)|value;
 				else
 				if ( (value = *str - 'A') < 6 || (value = *str - 'a') < 6)
@@ -683,8 +645,8 @@ int cmdline_param(char * str,int * argv,int maxread)
 					break;
 			}
 		}
-		else { //å¾ªç¯æŠŠå­—ç¬¦ä¸²è½¬ä¸ºæ•°å­—ï¼Œç›´åˆ°å­—ç¬¦ä¸ä¸º 0 - 9
-			unsigned int minus = ('-' == *str);//æ­£è´Ÿæ•°è½¬æ¢
+		else { //Ñ­»·°Ñ×Ö·û´®×ªÎªÊı×Ö£¬Ö±µ½×Ö·û²»Îª 0 - 9
+			unsigned int minus = ('-' == *str);//Õı¸ºÊı×ª»»
 			if (minus)
 				++str;
 
@@ -695,26 +657,26 @@ int cmdline_param(char * str,int * argv,int maxread)
 				*argv = -(*argv);
 		}
 
-		if ('\0' != *str && ' ' != *str)//å¦‚æœä¸æ˜¯ 0 - 9 è€Œä¸”ä¸æ˜¯ç©ºæ ¼ï¼Œåˆ™æ˜¯é”™è¯¯å­—ç¬¦
+		if ('\0' != *str && ' ' != *str)//Èç¹û²»ÊÇ 0 - 9 ¶øÇÒ²»ÊÇ¿Õ¸ñ£¬ÔòÊÇ´íÎó×Ö·û
 			return PARAMETER_ERROR;
 
-		for ( ; ' ' == *str ; ++str);//è·³è¿‡ç©ºæ ¼,ç»§ç»­åˆ¤æ–­ä¸‹ä¸€ä¸ªå‚æ•°
+		for ( ; ' ' == *str ; ++str);//Ìø¹ı¿Õ¸ñ,¼ÌĞøÅĞ¶ÏÏÂÒ»¸ö²ÎÊı
 	}
 
 	return argc;
 }
 
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    æ¬¢è¿é¡µ
-  * @param    shellin : äº¤äº’
-  * @param    recv    : ç¡¬ä»¶å±‚æ‰€æ¥æ”¶åˆ°çš„æ•°æ®ç¼“å†²åŒºåœ°å€
-  * @param    len     : ç¡¬ä»¶å±‚æ‰€æ¥æ”¶åˆ°çš„æ•°æ®é•¿åº¦
+  * @author   ¹ÅÃ´Äş
+  * @brief    »¶Ó­Ò³
+  * @param    shellin : ½»»¥
+  * @param    recv    : Ó²¼ş²ãËù½ÓÊÕµ½µÄÊı¾İ»º³åÇøµØÖ·
+  * @param    len     : Ó²¼ş²ãËù½ÓÊÕµ½µÄÊı¾İ³¤¶È
   * @return   don't care
 */
 void welcome_gets(struct shell_input * shellin,char * recv,int len)
 {
-	//æ‰“å°ä¸€ä¸ªæ¬¢è¿é¡µlogo
+	//´òÓ¡Ò»¸ö»¶Ó­Ò³logo
 	static const char consolologo[] = "\r\n\
   _____                        __\r\n\
  / ____\\                      /\\ \\\r\n\
@@ -731,15 +693,12 @@ void welcome_gets(struct shell_input * shellin,char * recv,int len)
 	return ;
 }
 
-
-
-
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    ç¡¬ä»¶ä¸Šæ¥æ”¶åˆ°çš„æ•°æ®åˆ°å‘½ä»¤è¡Œçš„ä¼ è¾“
-  * @param    shellin : äº¤äº’
-  * @param    recv    : ç¡¬ä»¶å±‚æ‰€æ¥æ”¶åˆ°çš„æ•°æ®ç¼“å†²åŒºåœ°å€
-  * @param    len     : ç¡¬ä»¶å±‚æ‰€æ¥æ”¶åˆ°çš„æ•°æ®é•¿åº¦
+  * @author   ¹ÅÃ´Äş
+  * @brief    Ó²¼şÉÏ½ÓÊÕµ½µÄÊı¾İµ½ÃüÁîĞĞµÄ´«Êä
+  * @param    shellin : ½»»¥
+  * @param    recv    : Ó²¼ş²ãËù½ÓÊÕµ½µÄÊı¾İ»º³åÇøµØÖ·
+  * @param    len     : Ó²¼ş²ãËù½ÓÊÕµ½µÄÊı¾İ³¤¶È
   * @return   don't care
 */
 void cmdline_gets(struct shell_input * shellin,char * recv,int len)
@@ -748,100 +707,102 @@ void cmdline_gets(struct shell_input * shellin,char * recv,int len)
 
 	for (char * end = recv + len ; recv < end ; ++recv) {
 		if (0 == state) {
-			/* æ™®é€šå­—ç¬¦è®¡å…¥å†…å­˜;å¦åˆ™åˆ¤æ–­ç‰¹æ®ŠåŠŸèƒ½å­—ç¬¦ */
+			/* ÆÕÍ¨×Ö·û¼ÆÈëÄÚ´æ;·ñÔòÅĞ¶ÏÌØÊâ¹¦ÄÜ×Ö·û */
 			if (*recv > 0x1F && *recv < 0x7f)
 				shell_getchar(shellin,*recv);
 			else
 			switch (*recv) {
-			case KEYCODE_ENTER:
-				if (shellin->tail){
-					printk("\r\n");
-					shell_record(shellin);
-					shell_parse(&shellcmdroot ,shellin);
-				}
-				else{
-					printk("\r\n%s",shellin->sign);
-				}
-				break;
-			case KEYCODE_ESC :
-				state = 1;
-				break;
-			case KEYCODE_CTRL_C:
-				shellin->edit = 0;
-				shellin->tail = 0;
-				printk("^C\r\n%s",shellin->sign);
-				break;
-			case KEYCODE_BACKSPACE :
-			case 0x7f: /* for putty */
-				if (shellin->edit)
-					shell_backspace(shellin);
-				break;
-			case KEYCODE_TAB:
-				shell_tab(shellin);
-				break;
-			default: ;
+        case KEYCODE_ENTER:
+          if (shellin->tail){
+            printf("\r\n");
+            shell_record(shellin);
+            shell_parse(&shellcmdroot ,shellin);
+          }
+          else{
+            printf("\r\n%s",shellin->sign);
+          }
+          break;
+        case KEYCODE_ESC :
+          state = 1;
+          break;
+        case KEYCODE_CTRL_C:
+          shellin->edit = 0;
+          shellin->tail = 0;
+          printf("^C\r\n%s",shellin->sign);
+          break;
+        case KEYCODE_BACKSPACE :
+        case 0x7f: /* for putty */
+          if (shellin->edit)
+            shell_backspace(shellin);
+          break;
+        case KEYCODE_TAB:
+          shell_tab(shellin);
+          break;
+        default: ;
 			}
 		}
 		else 
 		if (1 == state){ 
-			/* åˆ¤æ–­æ˜¯å¦æ˜¯ç®­å¤´å†…å®¹ */
+			/* ÅĞ¶ÏÊÇ·ñÊÇ¼ıÍ·ÄÚÈİ */
 			state = (*recv == '[') ? 2 : 0 ;
 		}
 		else{
-			/* if (2 == state) å“åº”ç®­å¤´å†…å®¹ */
+			/* if (2 == state) ÏìÓ¦¼ıÍ·ÄÚÈİ */
 			switch(*recv){  
-			case 'A'://ä¸Šç®­å¤´
-				shell_show_history(shellin,0);
-				break;
-			case 'B'://ä¸‹ç®­å¤´
-				shell_show_history(shellin,1);
-				break;
-			case 'C'://å³ç®­å¤´
-				if ( shellin->tail != shellin->edit)
-					printl(&shellin->cmdline[shellin->edit++],1);
-				break;
-			case 'D'://å·¦ç®­å¤´
-				if (shellin->edit){
-					--shellin->edit;
-					printl("\b",1);
-				}
-				break;
-			default:;
-			} //switch ç®­å¤´å†…å®¹
-		} // if (2 == state) //å“åº”ç®­å¤´å†…å®¹
+        case 'A'://ÉÏ¼ıÍ·
+          shell_show_history(shellin,0);
+          break;
+        case 'B'://ÏÂ¼ıÍ·
+          shell_show_history(shellin,1);
+          break;
+        case 'C'://ÓÒ¼ıÍ·
+          if ( shellin->tail != shellin->edit)
+            printl(&shellin->cmdline[shellin->edit++],1);
+          break;
+        case 'D'://×ó¼ıÍ·
+          if (shellin->edit){
+            --shellin->edit;
+            printl("\b",1);
+          }
+          break;
+        default:;
+			} //switch ¼ıÍ·ÄÚÈİ
+		} // if (2 == state) //ÏìÓ¦¼ıÍ·ÄÚÈİ
 	} //for ( ; len && *recv; --len,++recv)
 	return ;
 }
 
 /**
-  * @brief    å‘½ä»¤è¡Œä¿¡æ¯ç¡®è®¤ï¼Œå¦‚æœè¾“å…¥ y/Y åˆ™æ‰§è¡Œå‘½ä»¤
-  * @param    shellin : äº¤äº’
-  * @param    buf     : ç¡¬ä»¶å±‚æ‰€æ¥æ”¶åˆ°çš„æ•°æ®ç¼“å†²åŒºåœ°å€
-  * @param    len     : ç¡¬ä»¶å±‚æ‰€æ¥æ”¶åˆ°çš„æ•°æ®é•¿åº¦
+  * @brief    ÃüÁîĞĞĞÅÏ¢È·ÈÏ£¬Èç¹ûÊäÈë y/Y ÔòÖ´ĞĞÃüÁî
+  * @param    shellin : ½»»¥
+  * @param    buf     : Ó²¼ş²ãËù½ÓÊÕµ½µÄÊı¾İ»º³åÇøµØÖ·
+  * @param    len     : Ó²¼ş²ãËù½ÓÊÕµ½µÄÊı¾İ³¤¶È
   * @return   don't care
 */
 static void confirm_gets(struct shell_input * shellin ,char * buf , int len)
 {
 	char * option = &shellin->cmdline[COMMANDLINE_MAX_LEN-1];
 
-	if (0 == *option) { //å…ˆè¾“å…¥ [Y/y/N/n] ï¼Œå…¶ä»–æŒ‰é”®æ— æ•ˆ
+	if (0 == *option) { //ÏÈÊäÈë [Y/y/N/n] £¬ÆäËû°´¼üÎŞĞ§
 		if ('Y' == *buf || 'y' == *buf || 'N' == *buf || 'n' == *buf) {
 			*option = *buf;
 			printl(buf,1);
 		}
 	}
 	else
-	if (KEYCODE_BACKSPACE == *buf) { //å›é€€é”®
+	if (KEYCODE_BACKSPACE == *buf) { //»ØÍË¼ü
 		printl("\b \b",3);
 		*option = 0;
 	}
 	else
-	if ('\r' == *buf || '\n' == *buf) {//æŒ‰å›è½¦ç¡®å®š
-		cmd_fn_t yestodo = (cmd_fn_t)shellin->apparg;
+	if ('\r' == *buf || '\n' == *buf) {//°´»Ø³µÈ·¶¨
+//		cmd_fn_t yestodo = (cmd_fn_t)shellin->apparg;
+    cmd_fn_t yestodo;
+    memcpy(&yestodo, &shellin->apparg, sizeof(cmd_fn_t));
  		char opt = *option ; 
 		
 		*option = 0 ;  //shellin->cmdline[COMMANDLINE_MAX_LEN-1] = 0;
-		shellin->gets   = cmdline_gets;//æ•°æ®å›å½’ä¸ºå‘½ä»¤è¡Œæ¨¡å¼
+		shellin->gets   = cmdline_gets;//Êı¾İ»Ø¹éÎªÃüÁîĞĞÄ£Ê½
 		shellin->apparg = NULL;
 
 		printl("\r\n",2);
@@ -849,49 +810,54 @@ static void confirm_gets(struct shell_input * shellin ,char * buf , int len)
 		if ( 'Y' == opt || 'y' == opt) 
 			yestodo(shellin->cmdline);
 		else
-			printk("cancel this operation\r\n");
+			printf("cancel this operation\r\n");
 	}
 }
 
 /**
-  * @brief    å‘½ä»¤è¡Œä¿¡æ¯ç¡®è®¤ï¼Œå¦‚æœè¾“å…¥ y/Y åˆ™æ‰§è¡Œå‘½ä»¤
-  * @param    shell  : è¾“å…¥äº¤äº’
-  * @param    info   : é€‰é¡¹ä¿¡æ¯
-  * @param    yestodo: è¾“å…¥ y/Y åæ‰€éœ€æ‰§è¡Œçš„å‘½ä»¤
+  * @brief    ÃüÁîĞĞĞÅÏ¢È·ÈÏ£¬Èç¹ûÊäÈë y/Y ÔòÖ´ĞĞÃüÁî
+  * @param    shell  : ÊäÈë½»»¥
+  * @param    info   : Ñ¡ÏîĞÅÏ¢
+  * @param    yestodo: ÊäÈë y/Y ºóËùĞèÖ´ĞĞµÄÃüÁî
   * @return   don't care
 */
 void shell_confirm(struct shell_input * shellin ,char * info ,cmd_fn_t yestodo)
 {
-	printk("%s [Y/N] ",info);
-	shellin->gets = confirm_gets;// æ•°æ®æµè·å–è‡³ confirm_gets
-	shellin->apparg = yestodo;
+	printf("%s [Y/N] ",info);
+	shellin->gets = confirm_gets;// Êı¾İÁ÷»ñÈ¡ÖÁ confirm_gets
+//	shellin->apparg = (void*)yestodo;
+  memcpy(&shellin->apparg, &yestodo, sizeof(cmd_fn_t));
 	shellin->cmdline[COMMANDLINE_MAX_LEN-1] = 0;
 }
 
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    åˆå§‹åŒ–ä¸€ä¸ª shell äº¤äº’ï¼Œé»˜è®¤è¾“å…¥ä¸º cmdline_gets
-  * @param    shellin   : éœ€è¦åˆå§‹åŒ–çš„ shell äº¤äº’ 
-  * @param    shellputs : shell å¯¹åº”è¾“å‡ºï¼Œå¦‚ä»ä¸²å£è¾“å‡ºã€‚
-  * @param    ...       : å¯¹ gets å’Œ sign é‡å®šä¹‰ï¼Œå¦‚è¿½åŠ  MODIFY_SIGN,"shell>>"
+  * @author   ¹ÅÃ´Äş
+  * @brief    ³õÊ¼»¯Ò»¸ö shell ½»»¥£¬Ä¬ÈÏÊäÈëÎª cmdline_gets
+  * @param    shellin   : ĞèÒª³õÊ¼»¯µÄ shell ½»»¥ 
+  * @param    shellputs : shell ¶ÔÓ¦Êä³ö£¬Èç´Ó´®¿ÚÊä³ö¡£
+  * @param    ...       : ¶Ô gets ºÍ sign ÖØ¶¨Òå£¬Èç×·¼Ó MODIFY_SIGN,"shell>>"
   * @return   don't care
 */
 void shell_input_init(struct shell_input * shellin , fmt_puts_t shellputs,...)
 {
-	unsigned int arg  ;
+	uint32_t arg  ;
 	char * shellsign = DEFAULT_INPUTSIGN;
 	shellgets_t shellgets = welcome_gets;
 	
 	va_list ap;
-	va_start(ap, shellputs); //æ£€æµ‹æœ‰æ— æ–°å®šä¹‰ 
+	va_start(ap, shellputs); //¼ì²âÓĞÎŞĞÂ¶¨Òå 
 
 	arg = va_arg(ap, unsigned int) ;
 	for (; MODIFY_MASK == (arg & (~0x0f)) ; arg = va_arg(ap, unsigned int) ) {
-		if (MODIFY_SIGN == arg) //å¦‚æœé‡å®šä¹‰å½“å‰äº¤äº’çš„è¾“å…¥æ ‡å¿—
+		if (MODIFY_SIGN == arg) //Èç¹ûÖØ¶¨Òåµ±Ç°½»»¥µÄÊäÈë±êÖ¾
 			shellsign = va_arg(ap, char*);
 		else
-		if (MODIFY_GETS == arg) //å¦‚æœé‡å®šä¹‰å½“å‰äº¤äº’çš„è¾“å…¥æµå‘
-			shellgets = (shellgets_t)va_arg(ap, void*);
+		if (MODIFY_GETS == arg) //Èç¹ûÖØ¶¨Òåµ±Ç°½»»¥µÄÊäÈëÁ÷Ïò
+    {
+//      shellgets = (shellgets_t)va_arg(ap, void*);
+      void* shellgets_ptr = va_arg(ap, void*);
+      memcpy(&shellgets, &shellgets_ptr, sizeof(shellgets_t));
+    }	
 	}
 
 	va_end(ap);
@@ -909,10 +875,10 @@ void shell_input_init(struct shell_input * shellin , fmt_puts_t shellputs,...)
 
 
 /**
-  * @author   å¤ä¹ˆå®
-  * @brief    shell åˆå§‹åŒ–,æ³¨å†Œå‡ æ¡åŸºæœ¬çš„å‘½ä»¤ã€‚å…è®¸ä¸åˆå§‹åŒ–ã€‚
-  * @param    defaultsign : é‡å®šä¹‰é»˜è®¤è¾“å‡ºæ ‡å¿—ï¼Œä¸º NULL åˆ™ä¸ä¿®æ”¹é»˜è®¤æ ‡å¿—
-  * @param    puts        : printf,printk,printl çš„é»˜è®¤è¾“å‡ºï¼Œå¦‚ä»ä¸²å£è¾“å‡ºï¼Œä¸º NULL åˆ™ä¸æ‰“å°ä¿¡æ¯ã€‚
+  * @author   ¹ÅÃ´Äş
+  * @brief    shell ³õÊ¼»¯,×¢²á¼¸Ìõ»ù±¾µÄÃüÁî¡£ÔÊĞí²»³õÊ¼»¯¡£
+  * @param    defaultsign : ÖØ¶¨ÒåÄ¬ÈÏÊä³ö±êÖ¾£¬Îª NULL Ôò²»ĞŞ¸ÄÄ¬ÈÏ±êÖ¾
+  * @param    puts        : printf,printf,printl µÄÄ¬ÈÏÊä³ö£¬Èç´Ó´®¿ÚÊä³ö£¬Îª NULL Ôò²»´òÓ¡ĞÅÏ¢¡£
   * @return   don't care
 */
 void shell_init(char * defaultsign ,fmt_puts_t puts)
@@ -924,9 +890,7 @@ void shell_init(char * defaultsign ,fmt_puts_t puts)
 	current_puts = puts ;
 	default_puts = puts ;
 	
-	/* æ³¨å†Œä¸€äº›åŸºæœ¬å‘½ä»¤ */
+	/* ×¢²áÒ»Ğ©»ù±¾ÃüÁî */
 	shell_register_command("help"     ,shell_list_cmd);
-	shell_register_command("shell-version",shell_version);
 	shell_register_command("clear"        ,shell_clean_screen);
-	shell_register_command("debug-info"   ,shell_debug_stream);
 }
