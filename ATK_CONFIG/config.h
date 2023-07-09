@@ -39,10 +39,15 @@ typedef  void (*pFunction)(void);
 #define BOOTLOADER_START_ADDR             ADDR_FLASH_SECTOR_0             // BOOT区域地址(48 Kbytes )
 #define SYS_PARAMETER_START_ADDR          ADDR_FLASH_SECTOR_3             // 参数区域地址(16 Kbytes )
 #define APP1_START_ADDR                   ADDR_FLASH_SECTOR_4             // APP区域1(448 Kbytes ) 可以当做工厂分区，不允许轻易覆盖这个分区
-#define APP1_END_ADDR                     (ADDR_FLASH_SECTOR_8-1)
-#define APP1_SIZE                         (APP1_END_ADDR-APP1_START_ADDR+1)
+#define APP2_START_ADDR                   ADDR_FLASH_SECTOR_8             // APP区域2(512 Kbytes )
 
-#define APP2_START_ADDR                   (APP1_END_ADDR+1)             // APP区域2(512 Kbytes )
+// 推算
+#define SYS_PARAMETER_END_ADDR            (APP1_START_ADDR-1)
+#define SYS_PARAMETER_SIZE                (APP1_START_ADDR-SYS_PARAMETER_START_ADDR) 
+
+#define APP1_END_ADDR                     (APP2_START_ADDR-1)
+#define APP1_SIZE                         (APP2_START_ADDR-APP1_START_ADDR)
+
 #define APP2_END_ADDR                     ADDR_FLASH_SECTOR_11_END
 #define APP2_SIZE                         (APP2_END_ADDR-APP2_START_ADDR+1)
 
@@ -50,19 +55,16 @@ typedef  void (*pFunction)(void);
 #define FLASH_IMAGE_SIZE                 (uint32_t) (STM32_FLASH_SIZE - (APP1_START_ADDR - 0x08000000)) // 没有适配
 
 /** 参数区域定义 **/
-#define SYS_PARAMETER_END_ADDR            (ADDR_FLASH_SECTOR_5-1)
-#define SYS_PARAMETER_PART_SIZE           ((APP1_START_ADDR-SYS_PARAMETER_START_ADDR)/4)              // 参数分区容量 单位：字
-#define SYS_PARAMETER_SIZE                (sizeof(sys_parameter)/4+((sizeof(sys_parameter)%4)?1:0))   // 多少个字
+#define SYS_PARAMETER_WORD_SIZE           (sizeof(sys_parameter)/4+((sizeof(sys_parameter)%4)?1:0))   // 多少个字
 #define SYS_PARAMETER_READ                {STMFLASH_Read(SYS_PARAMETER_START_ADDR,\
-                                            (uint32_t*)&sys_parameter,SYS_PARAMETER_SIZE);}
+                                            (uint32_t*)&sys_parameter,SYS_PARAMETER_WORD_SIZE);}
 #define SYS_PARAMETER_WRITE               STMFLASH_Write(SYS_PARAMETER_START_ADDR,\
-                                            (uint32_t*)&sys_parameter,SYS_PARAMETER_SIZE)
-
+                                            (uint32_t*)&sys_parameter,SYS_PARAMETER_WORD_SIZE)
 /** FLASH地址 **/
 // 起始地址和大小
-#define STM32_FLASH_BASE        0x08000000 	        //STM32 FLASH的起始地址
-#define STM32_FLASH_SIZE        (0x100000)          /* 1 MByte */
-#define STM32_FLASH_END         (STM32_FLASH_BASE+STM32_FLASH_SIZE-1)
+#define STM32_FLASH_BASE            0x08000000 	        //STM32 FLASH的起始地址
+#define STM32_FLASH_SIZE            (0x100000)          /* 1 MByte */
+#define STM32_FLASH_END             (STM32_FLASH_BASE+STM32_FLASH_SIZE-1)
 
 // FLASH 扇区的起始地址
 #define ADDR_FLASH_SECTOR_0       ((uint32_t)0x08000000) 	//扇区0起始地址, 16 Kbytes  

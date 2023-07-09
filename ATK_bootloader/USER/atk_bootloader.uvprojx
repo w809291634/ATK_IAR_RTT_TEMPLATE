@@ -459,11 +459,6 @@
               <FilePath>..\SYSTEM\systick\systick.c</FilePath>
             </File>
             <File>
-              <FileName>app_start.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SYSTEM\app_start\app_start.c</FilePath>
-            </File>
-            <File>
               <FileName>soft_timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SYSTEM\soft_timer\soft_timer.c</FilePath>
@@ -537,6 +532,11 @@
               <FileName>download.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\IAP\download.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_start.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SYSTEM\app_start\app_start.c</FilePath>
             </File>
             <File>
               <FileName>ymodem.c</FileName>
