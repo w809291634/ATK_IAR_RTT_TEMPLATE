@@ -12,6 +12,7 @@ void IAP_download(void)
   int32_t Size = 0;
   uint32_t partition_start ,partition_size;
   uint32_t timeout=30*1000;
+  int32_t errarr[MAX_ERRORS]={0};
   
   if(download_part==1){
     /* 分区1 */
@@ -33,7 +34,7 @@ void IAP_download(void)
   printf("Waiting for the file to be sent ... (press 'a' key to exit IAP mode)\n\r");
   
   // 阻塞运行
-  Size = Ymodem_Receive(partition_start,partition_size,timeout);
+  Size = Ymodem_Receive(partition_start,partition_size,timeout,errarr);
   hw_ms_delay(500);
   if (Size > 0)
   {
@@ -48,8 +49,13 @@ void IAP_download(void)
   else if (Size == 0) debug_err("\n\r"ERR"Termination by sender!\n\r");
   else if (Size == -1) debug_err("\n\r"ERR"Programming address error or File too large!\n\r");
   else if (Size == -2) debug_err("\n\r"ERR"Erase flash error!\n\r");
-  else if (Size == -3) debug_err("\n\r"ERR"Programming flash error!\n\r");
-  else if (Size == -10) debug_err("\n\r"ERR"Error count exceeded.\n\r");
+  else if (Size == -3) debug_err("\n\r"ERR"Programming flash error!\r\n");
+  else if (Size == -10) {
+    debug_err("\n\r"ERR"Error count exceeded.\r\n");
+    for(int i=0;i<ARRAY_SIZE(errarr);i++){
+      debug_err(ERR"Error%d=%d.\r\n",i,errarr[i]);
+    }
+  }
   else if (Size == -11) debug_err("\n\r"ERR"Waiting timeout\n\r");
   else if (Size == -30) debug_war("\n\r"WARNING"Aborted by user.\n\r");
   else debug_err("\n\r"ERR"Failed to receive the file!\n\r");

@@ -232,7 +232,7 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
     case ABORT2:
       return 1;
     default:
-      return -1;
+      return -2;    // 没有帧头
   }
   // 接收一个包
   *data = c;
@@ -240,17 +240,17 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
   {
     if (Receive_Byte(data + i, timeout) != 0)
     {
-      return -1;
+      return -3;    // 接收数据超时
     }
   }
   // 帧序号取反
   if (data[PACKET_SEQNO_INDEX] != ((data[PACKET_SEQNO_COMP_INDEX] ^ 0xff) & 0xff))
   {
-    return -1;
+    return -4;      // 帧序号取反错误
   }
   // crc校验出错 
   if((Cal_CRC16((unsigned char *)(data + PACKET_HEADER), packet_size + PACKET_TRAILER)&0xFFFF) != 0)	{
-    return -1;
+    return -5;      // crc校验出错错误
   }
   // 数据包长度
   *length = packet_size;
@@ -265,7 +265,7 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
   * @param  timeout: 超时
   * @retval The size of the file
   */
-int32_t Ymodem_Receive (uint32_t partition_start ,uint32_t partition_size,uint32_t timeout)
+int32_t Ymodem_Receive (uint32_t partition_start ,uint32_t partition_size,uint32_t timeout,int32_t errarr[MAX_ERRORS])
 {
   uint32_t RamSource;
   uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
@@ -283,7 +283,8 @@ int32_t Ymodem_Receive (uint32_t partition_start ,uint32_t partition_size,uint32
     for (packets_received = 0, file_done = 0; ;)
     {
       /* 开始接收数据包 */
-      switch (Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT))
+      int32_t ret=Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT);
+      switch (ret)
       {
         /* 正常处理数据包 */
         case 0:
@@ -419,7 +420,9 @@ int32_t Ymodem_Receive (uint32_t partition_start ,uint32_t partition_size,uint32
         /* 其他处理 */
         default:
           if (session_begin > 0) errors ++;
-          
+            
+          if (errors>0) errarr[errors-1]=ret;
+      
           if (errors > MAX_ERRORS)
           {
             Send_Byte(CA);      // 请求结束传输

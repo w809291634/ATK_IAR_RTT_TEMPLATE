@@ -12,8 +12,6 @@ sys_parameter_t sys_parameter;
 static  rt_thread_t  LEDThread;	
 #define HARDWARE_VERSION               "V1.0.0"
 
-
-
 void fault_test_by_unalign(void) 
 {
     volatile int * SCB_CCR = (volatile int *) 0xE000ED14; // SCB->CCR
@@ -65,7 +63,7 @@ int main(void)
 	rt_thread_startup(LEDThread);
   
   while(1){
-    rt_kprintf("this is app 1 program!\r\n");
+    rt_kprintf("this is app 2 program!\r\n");
     rt_thread_mdelay(1000);
   }
   return 0;
