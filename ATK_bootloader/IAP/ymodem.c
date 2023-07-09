@@ -421,8 +421,13 @@ int32_t Ymodem_Receive (uint32_t partition_start ,uint32_t partition_size,uint32
         default:
           if (session_begin > 0) errors ++;
             
-          if (errors>0) errarr[errors-1]=ret;
-      
+          // 记录错误
+          if (errors>0) {
+            errarr[errors-1]=ret;
+            usart1_flush();
+          }
+          
+          // 错误超出
           if (errors > MAX_ERRORS)
           {
             Send_Byte(CA);      // 请求结束传输

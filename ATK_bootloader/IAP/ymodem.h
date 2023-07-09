@@ -53,7 +53,7 @@
 #define ABORT2                  (0x61)  /* 'a' == 0x61, abort by user */
 
 #define NAK_TIMEOUT             (0x200000)
-#define MAX_ERRORS              (10)
+#define MAX_ERRORS              (5)
 
 /* Exported macro ------------------------------------------------------------*/
 /* Common routines */

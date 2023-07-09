@@ -17,7 +17,7 @@
 #define USARTx_RX_PIN_NUM   GPIO_PinSource10
 #define USARTx_RX_PIN       GPIO_Pin_10
 
-#define USARTx_RINGBUF_SIZE                 (256)     
+#define USARTx_RINGBUF_SIZE                 (1050)     
 
 /**************************user config*************************/
 
@@ -73,6 +73,12 @@ void shell_hw_init(u32 bound)
   NVIC_Init(&NVIC_InitStructure);	
   
   USART_Cmd(USARTx, ENABLE);  //使能串口1 
+}
+
+// 清空数据
+void usart1_flush(void)
+{
+  Read_Index=Write_Index;
 }
 
 // 串口1的发送函数

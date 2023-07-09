@@ -8,6 +8,7 @@
 extern char usart1_mode;
 extern shellinput_t shell_1;
 
+void usart1_flush(void);
 uint16_t UART_GetRemainDate(char* data, char* ringbuf, uint16_t size, uint16_t w_index, uint16_t r_index) ;
 void shell_hw_init(u32 bound);
 int usart1_getchar(uint8_t* data);
