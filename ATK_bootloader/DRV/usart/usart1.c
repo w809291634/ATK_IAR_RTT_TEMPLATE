@@ -17,7 +17,7 @@
 #define USARTx_RX_PIN_NUM   GPIO_PinSource10
 #define USARTx_RX_PIN       GPIO_Pin_10
 
-#define USARTx_RINGBUF_SIZE                 (1050)     
+#define USARTx_RINGBUF_SIZE                 (256)     
 
 /**************************user config*************************/
 
