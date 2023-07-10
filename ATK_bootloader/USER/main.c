@@ -6,7 +6,7 @@
 #include "led.h"
 #include "esp32_at.h"
 #include "soft_timer.h"
-#include "config.h"
+#include "sys.h"
 #include "flash.h"
 #include "download.h"
 #include "app_start.h"

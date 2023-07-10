@@ -5,7 +5,7 @@
 #include "string.h"
 #include "systick.h"
 #include "soft_timer.h"
-#include "config.h"
+#include "sys.h"
 #include "user_cmd.h"
 
 #define RECV_CMD_BUF_SIZE           256

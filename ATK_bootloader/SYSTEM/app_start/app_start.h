@@ -1,6 +1,5 @@
 #ifndef __APP_START_H__
 #define __APP_START_H__
-#include "config.h"
 #include "sys.h"
 
 void nvic_reset(void) ;

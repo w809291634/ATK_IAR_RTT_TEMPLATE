@@ -1,6 +1,6 @@
 #include  "flash.h"
 #include  <string.h>
-#include "config.h"
+#include "board.h"
 
 //读取指定地址的字(32位数据) 
 //faddr:读地址 

@@ -1,11 +1,12 @@
 #include "user_cmd.h"
 #include "shell.h"
 #include "esp32_at.h"
-#include "config.h"
+#include "sys.h"
 #include "usart1.h"
 #include "download.h"
 #include "stdlib.h"
 #include "app_start.h"
+#include "flash.h"
 
 void SoftReset(void* arg)
 { 

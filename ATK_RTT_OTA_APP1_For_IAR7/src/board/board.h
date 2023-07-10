@@ -16,7 +16,7 @@
 #include "drv_gpio.h"
 #include <rthw.h>
 #include <rtdevice.h>
-#include "config.h"
+#include "iap_config.h"
 
 #ifdef __cplusplus
 extern "C" {

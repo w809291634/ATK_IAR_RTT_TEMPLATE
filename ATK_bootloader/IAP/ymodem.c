@@ -28,7 +28,6 @@
 #include "ymodem.h"
 #include "stdio.h"
 #include "string.h"
-#include "config.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

@@ -3,7 +3,7 @@
 #include "stm32f4xx.h" 	
 #include "soft_timer.h"
 #include "string.h"
-#include "config.h"
+#include "iap_config.h"
 #include "systick.h"
 #include "stdio.h"
 

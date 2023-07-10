@@ -1,5 +1,5 @@
 #include "download.h"
-#include "config.h"
+#include "sys.h"
 #include "ymodem.h"
 
 extern uint8_t file_name[FILE_NAME_LENGTH];
