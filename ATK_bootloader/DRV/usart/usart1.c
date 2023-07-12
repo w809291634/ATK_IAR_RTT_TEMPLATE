@@ -24,9 +24,7 @@
 // shell 终端使用变量
 shellinput_t shell_1;
 static char shell_ringbuf[USARTx_RINGBUF_SIZE]={0};
-static unsigned short Read_Index;
-static unsigned short Write_Index;
-static volatile unsigned char Receive_flag;      // 串口空闲中断接收标志，shell开始进行数据处理
+static volatile unsigned short Read_Index,Write_Index;
 
 char usart1_mode=0;             // 串口的数据流 工作指向  0：数据到达shell控制台  1：数据到达IAP更新
 
@@ -78,7 +76,12 @@ void shell_hw_init(u32 bound)
 // 清空数据
 void usart1_flush(void)
 {
+  USART_Cmd(USARTx, DISABLE);
+  USART_ITConfig(USARTx, USART_IT_IDLE, DISABLE);
   Read_Index=Write_Index;
+  USART_ClearFlag(USARTx, USART_FLAG_IDLE);
+  USART_ITConfig(USARTx, USART_IT_IDLE, ENABLE);
+  USART_Cmd(USARTx, ENABLE);
 }
 
 // 串口1的发送函数
