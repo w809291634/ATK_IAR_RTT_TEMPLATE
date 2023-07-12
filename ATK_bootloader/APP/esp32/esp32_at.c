@@ -113,6 +113,12 @@ static int list_contains_str(char* str,char** list,int len)
   return 0;
 }
 
+// 左移char数组
+void leftShiftCharArray(char* arr, int size, int shiftAmount) {
+  memmove(arr, arr + shiftAmount, (size - shiftAmount) * sizeof(char));
+  memset(arr + size - shiftAmount, 0, shiftAmount * sizeof(char));
+}
+
 // at 命令 处理结果1
 int esp32_command_handle(const char* buf,unsigned short len)
 {
