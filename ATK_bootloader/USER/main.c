@@ -36,8 +36,9 @@ static void system_init()
 // 硬件初始化
 static void hardware_init()
 {
-  led_init();                             // 初始化 LED
   systick_init();                         // 时钟初始化
+  esp32_reset();
+  led_init();                             // 初始化 LED
   softTimer_Init();                       // 软件定时器初始化
   esp32_at_hw_init(115200);               // 初始化 ESP8266 WiFi at串口 
 }

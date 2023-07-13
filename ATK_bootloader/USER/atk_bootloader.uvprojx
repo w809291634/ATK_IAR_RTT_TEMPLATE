@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER,USE_FULL_ASSERT</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\SYSTEM\soft_timer;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED;..\APP\esp32;..\DRV\flash;..\..\ATK_CONFIG;..\IAP;..\SYSTEM\app_start</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\systick;..\SYSTEM\sys;..\SYSTEM\soft_timer;..\USER;..\FWLIB\inc;..\SHELL;..\DRV\usart;..\DRV\LED;..\OTA;..\DRV\flash;..\..\ATK_CONFIG;..\IAP;..\SYSTEM\app_start</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -516,16 +516,6 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>APP</GroupName>
-          <Files>
-            <File>
-              <FileName>esp32_at.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\APP\esp32\esp32_at.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>IAP</GroupName>
           <Files>
             <File>
@@ -542,6 +532,21 @@
               <FileName>ymodem.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\IAP\ymodem.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>OTA</GroupName>
+          <Files>
+            <File>
+              <FileName>esp32_at.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\OTA\esp32_at.c</FilePath>
+            </File>
+            <File>
+              <FileName>ota.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\OTA\ota.c</FilePath>
             </File>
           </Files>
         </Group>

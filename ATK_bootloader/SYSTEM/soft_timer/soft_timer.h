@@ -8,7 +8,7 @@
 ******************************************************/
 #define ESP32_TIMEOUT_TIMER_ID    0
 #define LED_APP_TIMER_ID          1
-
+#define ESP32_CONNECT_ID          2
 
 
 
