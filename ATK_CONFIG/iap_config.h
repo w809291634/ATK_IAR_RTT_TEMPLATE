@@ -2,15 +2,9 @@
 #define __IAP_CONFIG_H__
 #include "stm32f4xx.h"
 
-#define BIT_0       (1<<0)
-#define BIT_1       (1<<1)
-#define BIT_2       (1<<2)
-#define BIT_3       (1<<3)
-#define BIT_4       (1<<4)
-#define BIT_5       (1<<5)
-#define BIT_6       (1<<6)
-#define BIT_7       (1<<7)
-#define ARRAY_SIZE(p) (sizeof(p)/sizeof(p[0]))
+/** 服务器 **/
+#define IOT_SERVER_IP           "iot-api.heclouds.com"
+#define IOT_SERVER_PORT         80
 
 /** 系统参数类型 **/
 typedef struct{
@@ -80,11 +74,21 @@ typedef  void (*pFunction)(void);
 #define ADDR_FLASH_SECTOR_11      ((uint32_t)0x080E0000) 	//扇区11起始地址,128 Kbytes  
 #define ADDR_FLASH_SECTOR_11_END  ((uint32_t)0x080FFFFF) 	//扇区11终止地址 
 #define ADDR_FLASH_SYSTEM_MEM     ((uint32_t)0X1FFF0000) 	//STM32F4 系统存储器的起始地址 30 Kbytes
-         
+    
+#define BIT_0       (1<<0)
+#define BIT_1       (1<<1)
+#define BIT_2       (1<<2)
+#define BIT_3       (1<<3)
+#define BIT_4       (1<<4)
+#define BIT_5       (1<<5)
+#define BIT_6       (1<<6)
+#define BIT_7       (1<<7)
+#define ARRAY_SIZE(p) (sizeof(p)/sizeof(p[0]))
+
 /** debug 层控制 **/
 // 0xff 显示所有层的信息
 // 0x00 所有层的信息都不显示
-#define DEBUG           0x1E        // 0x01-显示 debug 信息 
+#define DEBUG           0x1e        // 0x01-显示 debug 信息 
                                     // 0x02-显示 error 信息 
                                     // 0x04-显示 warning 信息 
                                     // 0x08-显示 info 信息 

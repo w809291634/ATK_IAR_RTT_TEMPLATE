@@ -399,9 +399,9 @@
               <FilePath>.\system_stm32f4xx.c</FilePath>
             </File>
             <File>
-              <FileName>config.h</FileName>
+              <FileName>iap_config.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\..\ATK_CONFIG\config.h</FilePath>
+              <FilePath>..\..\ATK_CONFIG\iap_config.h</FilePath>
             </File>
           </Files>
         </Group>

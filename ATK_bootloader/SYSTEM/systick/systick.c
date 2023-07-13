@@ -1,7 +1,7 @@
 #include "systick.h"
 #include "soft_timer.h"
 
-static uint32_t tick = 0;
+static volatile uint32_t tick = 0;
 
 void systick_init(void)
 {
@@ -18,7 +18,7 @@ void SysTick_Handler(void)
 
 uint32_t tick_get(void)
 {
-    return tick;
+  return tick;
 }
 
 //获取系统的运行时间，单位us
@@ -58,5 +58,5 @@ void hw_us_delay(unsigned int us)
 void hw_ms_delay(unsigned int ms)
 {
   uint32_t start_ms= millis();
-  while(millis()- start_ms > ms);
+  while(millis()- start_ms < ms);
 }

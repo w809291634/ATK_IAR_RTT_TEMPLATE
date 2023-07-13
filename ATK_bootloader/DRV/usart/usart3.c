@@ -25,8 +25,7 @@
 
 /**************************user config*************************/
 static char esp32_at_ringbuf[USARTx_RINGBUF_SIZE]={0};
-static unsigned short Read_Index;
-static unsigned short Write_Index;
+static volatile unsigned short Read_Index,Write_Index;
 extern uint16_t UART_GetRemainDate(char* data, char* ringbuf, uint16_t size, uint16_t w_index, uint16_t r_index) ;
 
 //初始化IO 串口 
@@ -66,7 +65,7 @@ void esp32_at_hw_init(u32 bound)
   
 	// NVIC 配置
   NVIC_InitStructure.NVIC_IRQChannel = USARTx_IRQn;			  // 串口中断通道
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=1; // 抢占优先级
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0; // 抢占优先级
   NVIC_InitStructure.NVIC_IRQChannelSubPriority =0;		    // 子优先级
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			    // IRQ通道使能
   NVIC_Init(&NVIC_InitStructure);	
@@ -93,7 +92,7 @@ void esp32_usart_data_handle()
     /* 取环形缓存区剩余数据 */
     char temp[USARTx_RINGBUF_SIZE]={0};
     uint16_t data_len=UART_GetRemainDate(temp,esp32_at_ringbuf,USARTx_RINGBUF_SIZE,Write_Index,Read_Index);
-      
+    
     /* 接收并处理此处数据 */
     int ret=esp32_command_handle(temp,data_len);        // 回调应用层的数据处理函数
     if(ret==-1){
@@ -101,7 +100,7 @@ void esp32_usart_data_handle()
     }
     
     /* 数据处理结束 */
-    Read_Index = (Read_Index+data_len)% USARTx_RINGBUF_SIZE;          // 下次读取数据的起始位置，防止超出缓存区最大索引
+    Read_Index = (Read_Index+data_len)% USARTx_RINGBUF_SIZE;          // 下次读取数据的起始位置，防止超出缓存区最大索引   
   }
 }
 

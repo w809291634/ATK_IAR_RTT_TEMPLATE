@@ -76,12 +76,7 @@ void shell_hw_init(u32 bound)
 // 清空数据
 void usart1_flush(void)
 {
-  USART_Cmd(USARTx, DISABLE);
-  USART_ITConfig(USARTx, USART_IT_IDLE, DISABLE);
   Read_Index=Write_Index;
-  USART_ClearFlag(USARTx, USART_FLAG_IDLE);
-  USART_ITConfig(USARTx, USART_IT_IDLE, ENABLE);
-  USART_Cmd(USARTx, ENABLE);
 }
 
 // 串口1的发送函数

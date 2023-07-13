@@ -37,6 +37,25 @@ void* my_memcpy(void* dest, const void* src, size_t num)
 	return ret;
 }
 
+// 列表中是否包含字符串
+// obj 目标字符串  list 字符串列表  len 列表长度
+int list_contains_str(char* str,char** list,int len)
+{
+  for(int i=0;i<len;i++){
+    if(strstr(str,list[i]))
+      return 1;
+  }
+  return 0;
+}
+
+// 数组元素左移，使用0填充
+// arr 数组   size 数组元素个数  shiftAmount 移动元素个数
+void leftShiftCharArray(char* arr, int size, int shiftAmount) 
+{
+  memmove(arr, arr + shiftAmount, (size - shiftAmount) * sizeof(char));
+  memset(arr + size - shiftAmount, 0, shiftAmount * sizeof(char));
+}
+
 #ifdef  USE_FULL_ASSERT
  /**
    * @brief  Reports the name of the source file and the source line number

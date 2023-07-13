@@ -18,7 +18,7 @@ void SoftReset(void* arg)
 // esp 触发连接AP
 void connect_ap(void* arg)
 { 
-  esp32_connect_ap_start();
+  esp32_connect_start();
 }
 
 // 设置 ESP 的 wifi名称 和 密码
