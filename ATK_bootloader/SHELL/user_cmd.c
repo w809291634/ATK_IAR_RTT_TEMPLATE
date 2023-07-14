@@ -78,9 +78,16 @@ void Start_APP(void * arg)
 }
 
 // 检查升级版本
-void __OTA_check_version(void * arg)
+void __OTA_update_start(void * arg)
 {
-  OTA_check_version();
+  char * argv[2];
+  int argc =cmdline_strtok((char*)arg,argv,2);
+  if(argc<2){
+    debug_info(INFO"please input %s [<partition>] \r\n",OTA_update);
+    return;
+  }
+  download_part=atoi(argv[1]);
+  OTA_update_start();
 }
 
 // 用户命令注册
@@ -92,5 +99,5 @@ void register_user_cmd()
   shell_register_command(ESP_GET_SSID_PASS_CMD,esp_get_ssid_pass);
   shell_register_command(IAP_CMD,start_IAP_mode);
   shell_register_command(APP_START,Start_APP);
-  shell_register_command(OTA_CHECK,__OTA_check_version);
+  shell_register_command(OTA_update,__OTA_update_start);
 }

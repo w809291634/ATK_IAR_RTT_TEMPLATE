@@ -6,7 +6,7 @@
 #define  ESP_GET_SSID_PASS_CMD               "esp_get"
 #define  IAP_CMD                             "iap"
 #define  APP_START                           "enter_app"
-#define  OTA_CHECK                           "ota_check"
+#define  OTA_update                          "ota_update"
 
 void register_user_cmd(void);
 #endif

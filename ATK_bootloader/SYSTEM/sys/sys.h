@@ -7,14 +7,17 @@
 #include "systick.h"
 #include "stdio.h"
 
+extern uint8_t download_part;
+
 /** debug 层控制 **/
 // 0xff 显示所有层的信息
 // 0x00 所有层的信息都不显示
-#define DEBUG           0x1f        // 0x01-显示 debug 信息 
+#define DEBUG           0x3e        // 0x01-显示 debug 信息 
                                     // 0x02-显示 error 信息 
                                     // 0x04-显示 warning 信息 
                                     // 0x08-显示 info 信息 
                                     // 0x10-显示 at 信息
+                                    // 0x20-显示 OTA 信息
 #define ERR "ERROR:"
 #define WARNING "WARNING:"
 #define INFO "INFORMATION:"
@@ -47,6 +50,12 @@
 #define debug_at printf
 #else
 #define debug_at(...)
+#endif
+
+#if (DEBUG & 0x20)
+#define debug_ota printf
+#else
+#define debug_ota(...)
 #endif
 
 //位带操作,实现51类似的GPIO控制功能

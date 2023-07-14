@@ -6,19 +6,24 @@
 #include "sys.h"
 #include "user_cmd.h"
 #include "jsmn.h"
+#include "flash.h"
 
 /** 用户配置 **/
-#define HTTP_TASK1                  "OTA_check_version"
-#define HTTP_TASK2                  "OTA_download"
+#define OTA_TASK1                  "OTA_check_version"
+#define OTA_TASK2                  "OTA_download"
+#define OTA_TASK3                  "OTA_download"
+#define OTA_TASK4                  "OTA_download"
+#define OTA_TASK5                  "OTA_download"
 
 #define HTTP_DATA_BUF_SIZE          550
 #define HTTP_HEADER_BUF_SIZE        50
 #define MAX_ERROR_NUM               3  // 重试次数
 #define MAX_TOKENS                  40
-
+#define HTTP_SEND                   "ONENET<--"
+#define HTTP_RECV                   "ONENET-->"
 
 static char http_flag;              // 标志位 
-                                    // 位0 开始一次处理
+                                    // 位0 1：进行一次任务
                                     // 位1 备用
                                     // 位2 备用
                                     // 位3 0：当前有请求正在处理 1：处理结束  
@@ -30,13 +35,12 @@ static char report_ver;
 
 /** 控制发送逻辑 **/
 static char request_index;          // 请求的索引
-static char* current_list;
-static char post_version_list[]={5};          // 发送版本的请求列表
-static char ota_update_list[]={1,2,3,4,5};    // OTA 升级的请求列表
 static char current_request[30];
-
 static char err_times;
 
+static uint8_t* current_list;
+static uint8_t post_version_list[]={5,0xff};          // 发送版本的请求列表
+static uint8_t ota_update_list[]={1,2,3,4,5,0xff};    // OTA 升级的请求列表
 /** 处理回复 **/
 // 当前请求的数据缓存
 static char http_buf[HTTP_DATA_BUF_SIZE]; // HTTP 协议的正文 和 接收处理buf
@@ -49,12 +53,22 @@ static char res_msg[12];
 static char target_version[24];
 static uint32_t tid;
 static uint32_t file_size;
+// 下载分区信息
+static uint32_t ota_partition_start;
+static uint32_t ota_partition_size;
 
 /** json数据处理 **/
 jsmn_parser parser;
 jsmntok_t tokens[MAX_TOKENS];
 
-
+// esp32发送数据到服务器
+static void esp32_send_IOT(const char * strbuf, unsigned short len)
+{
+  if(esp32_link){
+    usart3_puts(strbuf,len);
+    debug_ota(HTTP_SEND"%s\r\n",current_request);
+  }
+}
 
 // 进行一次复位，可以再次发送请求
 static void http_request_reset()
@@ -230,12 +244,18 @@ void OTA_check_version(void)
     debug_err(ERR"sys_parameter error!");
     return;
   }
+  
   char url[150];
   sprintf(url,"http://iot-api.heclouds.com/fuse-ota/%s/check?type=1&version=%s",
       IOT_PRO_ID_NAME,sys_parameter.app2_fw_version);
   http_get_request(url,"application/json");
-  strcpy(current_request,HTTP_TASK1);
 }
+
+
+
+
+
+
 
 // 向服务器发送当前版本
 void OTA_POST_version(void)
@@ -260,47 +280,45 @@ static int http_request_handle(void)
   // 命令能够发送标志位
   if(!(http_flag & BIT_3))return 0;
   
-  // 判断索引正确性 并 获取
-  if(request_index >= strlen(current_list)){
-    debug_err(ERR"index error!\r\n");
-    return -1;
-  }
-  char cmd_id = current_list[request_index];
+  uint8_t cmd_id = current_list[request_index];
   // 开始发送命令
   switch(cmd_id){
-    case 0:{
-      /* OTA_check_version */
-      OTA_check_version();
-      softTimer_start(HTTP_REQUEST_ID,2000);
-    }break;
     case 1:{
-      /*  */
-
-      softTimer_start(HTTP_REQUEST_ID,2000);
+      /* OTA_check_version */
+      if(download_part==1) sys_parameter.app1_flag=APP_ERR;
+      else if(download_part==2) sys_parameter.app2_flag=APP_ERR;
+      write_sys_parameter();
+      
+      strcpy(current_request,OTA_TASK1);
+      OTA_check_version();
+      softTimer_start(HTTP_REQUEST_ID,5000);
     }break;
     case 2:{
       /*  */
-
-      softTimer_start(HTTP_REQUEST_ID,2000);    // 默认连接超时为15s
+      strcpy(current_request,OTA_TASK2);
+      
+      softTimer_start(HTTP_REQUEST_ID,5000);    // 默认连接超时为15s
     }break;
     case 3:{
       /* AT+CIPMODE=1 */
       
-      softTimer_start(HTTP_REQUEST_ID,2000);
+      softTimer_start(HTTP_REQUEST_ID,5000);
     }break;  
     case 4:{
       /*  */
 
-      softTimer_start(HTTP_REQUEST_ID,2000);
+      softTimer_start(HTTP_REQUEST_ID,5000);
     }break;
     case 5:{
 
-      softTimer_start(HTTP_REQUEST_ID,2000);
+      softTimer_start(HTTP_REQUEST_ID,5000);
     }break;
-    case 6:{
+    case 0xff:{
+      /* 列表请求完成 */
 
       debug_info(INFO"CONNECT SUCCESS!\r\n");
     }return 1;
+    
     default:{
       http_system_reset();
       debug_err(ERR"instruction exceeeded!\r\n");
@@ -340,11 +358,11 @@ static void http_respond_handle(void)
   
   char temp[50]={0};
   /* 开始进行响应数据处理 */
-  if(strstr(current_request,HTTP_TASK1)){
-    // 处理 检查升级任务
+  // 处理 检查升级任务
+  if(strstr(current_request,OTA_TASK1)){
+    // 获取JSON中的对象数据
     int r = jsmn_parse(&parser, http_buf, strlen(http_buf), tokens, MAX_TOKENS);
-    if(r>1){
-      // 获取JSON中的对象数据
+    if(r>0){
       for (int i = 1; i < r; i++) {
         // 获取 JSON 对象位置信息
         char *p =http_buf + tokens[i + 1].start;
@@ -355,36 +373,75 @@ static void http_respond_handle(void)
           }
           else debug_err(ERR"buf not space\r\n");
           i++;
-        } else if (jsoneq(http_buf, &tokens[i], "target") == 0) {
+        } 
+        else if (jsoneq(http_buf, &tokens[i], "target") == 0) {
           if(len < sizeof(target_version)){
             memcpy(target_version, p, len);target_version[len]='\0';
           }
           else debug_err(ERR"buf not space\r\n");
           i++;
-        } else if (jsoneq(http_buf, &tokens[i], "tid") == 0) {
+        } 
+        else if (jsoneq(http_buf, &tokens[i], "tid") == 0) {
           memcpy(temp, p, len);temp[len]='\0';
           tid = atoi(temp);
           i++;
-        } else if (jsoneq(http_buf, &tokens[i], "size") == 0) {
+        } 
+        else if (jsoneq(http_buf, &tokens[i], "size") == 0) {
           memcpy(temp, p, len);temp[len]='\0';
           file_size = atoi(temp);
           i++;
         } 
       }
+      // 显示接收信息
+      debug_ota(HTTP_RECV"msg:%s\r\n",res_msg);
+      
       // 根据信息处理下一步
-      printf("%s\r\n",res_msg);
-      printf("%s\r\n",target_version);
-      printf("%d\r\n",tid);
-      printf("%d\r\n",file_size);
-    }
-    else http_request_retry();
+      if(strstr(res_msg,"succ")) {
+        /* 检查地址 */
+        u32 addrx=ota_partition_start;           // 写入起始地址
+        u32 end_addr=ota_partition_start+file_size;   // 接收文件的写入终止地址，加1
+        
+        if (file_size > ota_partition_size  || 
+            addrx < STM32_FLASH_BASE ||       // 起始地址检查
+            addrx % 4 )
+        {
+          debug_err(ERR"Programming address error\r\n");
+          http_system_reset();
+        }
+
+        /* 擦除需要的flash部分 */
+        FLASH_Unlock();
+        FLASH_DataCacheCmd(DISABLE);
+        
+        while(addrx < end_addr)	
+        {
+          if(*(vu32*)addrx!=0XFFFFFFFF)           // 有非0XFFFFFFFF的地方,要擦除这个扇区,同时进行校验
+          {   
+            uint16_t Sector_num = STMFLASH_GetFlashSector(addrx);
+            if(FLASH_EraseSector(Sector_num,VoltageRange_3)!=FLASH_COMPLETE){   //VCC=2.7~3.6V之间!!
+              FLASH_DataCacheCmd(ENABLE);	
+              FLASH_Lock();
+              
+              debug_err(ERR"Erase flash error!\r\n");
+              http_system_reset();
+            }
+          }else addrx+=4;
+        } 
+        FLASH_DataCacheCmd(ENABLE);	              // FLASH擦除结束,开启数据缓存
+        FLASH_Lock();                             // 上锁
+        
+        // 可以发送下一次请求
+        REQUEST_OK;
+      }
+      else http_request_retry();    
+    }else http_request_retry();
   }
-  else if(strstr(current_request,HTTP_TASK2)){
+  else if(strstr(current_request,OTA_TASK2)){
   
   
   }
   
-  
+
   // 一个请求处理结束
   http_request_reset();
 }
@@ -397,7 +454,6 @@ static void http_request_timeout()
   debug_war(WARNING"<%s> request timeout:\r\n",current_request);
   http_request_retry();
 }
-
 
 // 进行 ota 升级系统的初始化
 void OTA_system_init(void)
@@ -418,7 +474,38 @@ void OTA_system_loop(void)
 void OTA_report_hw_version(void)
 {
   if(!report_ver){
-  
-    
+    http_system_reset();     // 首次复位
+    current_list=post_version_list;
+    http_flag |= BIT_0;
+  }
+}
+
+// 进行一次 OTA 更新
+void OTA_update_start(void)
+{
+  if(!report_ver){
+    if(!(http_flag & BIT_0)){
+      http_system_reset();     // 首次复位
+      current_list=ota_update_list;
+      
+      // 进行分区判断
+      if(download_part==1){
+        /* 分区1 */
+        ota_partition_start=APP1_START_ADDR;
+        ota_partition_size=APP1_SIZE;
+      }
+      else if(download_part==2){
+        /* 分区2 */
+        ota_partition_start=APP2_START_ADDR;
+        ota_partition_size=APP2_SIZE;
+      }else {
+        debug_err(ERR"Please set partition to 1 or 2!\r\n");
+        return ;
+      }
+
+      http_flag |= BIT_0;
+    }else{
+      debug_info(INFO"HTTP requesting\r\n");
+    }
   }
 }

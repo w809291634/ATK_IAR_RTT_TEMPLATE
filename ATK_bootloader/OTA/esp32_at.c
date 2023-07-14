@@ -358,9 +358,3 @@ void esp32_connect_start(void)
     softTimer_start(ESP32_CONNECT_ID,1000);
   }else _esp32_connect_start();
 }
-
-// esp32发送数据到服务器
-void esp32_send_IOT(const char * strbuf, unsigned short len)
-{
-  if(esp32_link)usart3_puts(strbuf,len);
-}

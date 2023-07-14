@@ -2,6 +2,8 @@
 #include "usart1.h"
 #include "flash.h"
 
+uint8_t download_part;
+
 //标准库需要的支持函数                 
 struct __FILE 
 { 

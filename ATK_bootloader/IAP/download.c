@@ -3,7 +3,6 @@
 #include "ymodem.h"
 
 extern uint8_t file_name[FILE_NAME_LENGTH];
-uint8_t download_part;
 
 // 通过串口 IAP 向 flash 下载一个文件
 void IAP_download(void)
