@@ -7,6 +7,7 @@
 #include "stdlib.h"
 #include "app_start.h"
 #include "flash.h"
+#include "ota.h"
 
 void SoftReset(void* arg)
 { 
@@ -16,7 +17,7 @@ void SoftReset(void* arg)
 }
 
 // esp 触发连接AP
-void connect_ap(void* arg)
+void connect_server(void* arg)
 { 
   esp32_connect_start();
 }
@@ -36,8 +37,7 @@ void esp_set_ssid_pass(void * arg)
   }
   strcpy(sys_parameter.wifi_ssid,argv[1]);
   strcpy(sys_parameter.wifi_pwd,argv[2]);
-  sys_parameter.wifi_flag=FLAG_OK;
-  
+
   write_sys_parameter();
 }
 
@@ -45,9 +45,6 @@ void esp_set_ssid_pass(void * arg)
 void esp_get_ssid_pass(void * arg)
 {
   SYS_PARAMETER_READ;
-  if(sys_parameter.wifi_flag!=APP_OK){
-    debug_info(INFO"Please use %s cmd set wifi parameter!\r\n",ESP_SET_SSID_PASS_CMD);
-  }
   debug_info(INFO"wifi ssid:%s\r\n",sys_parameter.wifi_ssid);
   debug_info(INFO"wifi passwd:%s\r\n",sys_parameter.wifi_pwd);
 }
@@ -80,13 +77,20 @@ void Start_APP(void * arg)
   start_app_partition(partition);
 }
 
+// 检查升级版本
+void __OTA_check_version(void * arg)
+{
+  OTA_check_version();
+}
+
 // 用户命令注册
 void register_user_cmd()
 {
   shell_register_command("reboot",SoftReset);
-  shell_register_command("esp_connect_ap",connect_ap);
+  shell_register_command("esp_connect",connect_server);
   shell_register_command(ESP_SET_SSID_PASS_CMD,esp_set_ssid_pass);
   shell_register_command(ESP_GET_SSID_PASS_CMD,esp_get_ssid_pass);
   shell_register_command(IAP_CMD,start_IAP_mode);
   shell_register_command(APP_START,Start_APP);
+  shell_register_command(OTA_CHECK,__OTA_check_version);
 }

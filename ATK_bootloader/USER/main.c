@@ -10,6 +10,7 @@
 #include "flash.h"
 #include "download.h"
 #include "app_start.h"
+#include "ota.h"
 
 // 系统参数保存区域
 sys_parameter_t sys_parameter;
@@ -46,8 +47,10 @@ static void hardware_init()
 // 应用初始化
 static void app_init()
 {
+  sys_parameter_init();
   register_user_cmd();
   esp32_at_app_init();
+  OTA_system_init();
   led_app_init(); 
 }
 
@@ -58,8 +61,9 @@ int main(void)
   hardware_init();
   app_init();
   while(1){
-    softTimer_Update();         // 软件定时器扫描
-    esp32_at_app_cycle();       // esp32 的应用循环
+    softTimer_Update();           // 软件定时器扫描
+    esp32_at_app_cycle();         // esp32 的应用循环
+    OTA_system_loop();            // OTA 系统的应用循环
     if(usart1_mode==0)
       shell_app_cycle();          // shell 控制台应用循环 
     else{

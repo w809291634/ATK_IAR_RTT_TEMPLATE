@@ -89,6 +89,7 @@ void JumpToApp(uint32_t app_addr)
 // 启动app系统分区
 void start_app_partition(uint8_t partition)
 {
+  if(sys_parameter.parameter_flag!=FLAG_OK)return;
   switch(partition){
     case 1:{
       if(sys_parameter.app1_flag==APP_OK){

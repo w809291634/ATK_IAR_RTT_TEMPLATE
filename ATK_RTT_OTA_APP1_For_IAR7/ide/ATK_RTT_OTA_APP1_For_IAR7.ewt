@@ -477,9 +477,6 @@
     </group>
   </group>
   <file>
-    <name>$PROJ_DIR$\..\..\ATK_CONFIG\config.h</name>
-  </file>
-  <file>
     <name>$PROJ_DIR$\..\src\main.c</name>
   </file>
   <file>

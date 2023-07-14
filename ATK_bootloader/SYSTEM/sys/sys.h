@@ -3,9 +3,51 @@
 #include "stm32f4xx.h" 	
 #include "soft_timer.h"
 #include "string.h"
-#include "iap_config.h"
+#include "sys_config.h"
 #include "systick.h"
 #include "stdio.h"
+
+/** debug 层控制 **/
+// 0xff 显示所有层的信息
+// 0x00 所有层的信息都不显示
+#define DEBUG           0x1f        // 0x01-显示 debug 信息 
+                                    // 0x02-显示 error 信息 
+                                    // 0x04-显示 warning 信息 
+                                    // 0x08-显示 info 信息 
+                                    // 0x10-显示 at 信息
+#define ERR "ERROR:"
+#define WARNING "WARNING:"
+#define INFO "INFORMATION:"
+
+#if (DEBUG & 0x01)
+#define debug printf
+#else
+#define debug(...)
+#endif
+
+#if (DEBUG & 0x02)
+#define debug_err printf
+#else
+#define debug_err(...)
+#endif
+
+#if (DEBUG & 0x04)
+#define debug_war printf
+#else
+#define debug_war(...)
+#endif
+
+#if (DEBUG & 0x08)
+#define debug_info printf
+#else
+#define debug_info(...)
+#endif
+
+#if (DEBUG & 0x10)
+#define debug_at printf
+#else
+#define debug_at(...)
+#endif
 
 //位带操作,实现51类似的GPIO控制功能
 //具体实现思想,参考<<CM3权威指南>>第五章(87页~92页).M4同M3类似,只是寄存器地址变了.
@@ -71,6 +113,7 @@ void MSR_MSP(u32 addr);	//设置堆栈地址
 void* my_memcpy(void* dest, const void* src, size_t num);
 int list_contains_str(char* str,char** list,int len);
 void leftShiftCharArray(char* arr, int size, int shiftAmount);
+void sys_parameter_init(void);
 #endif
 
 

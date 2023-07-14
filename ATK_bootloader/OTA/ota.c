@@ -5,12 +5,420 @@
 #include "string.h"
 #include "sys.h"
 #include "user_cmd.h"
+#include "jsmn.h"
 
-#define AUTHORIZATION "version=2022-05-01&res=userid%2F315714&et=1720619752&method=sha1&sign=GG%2FUnpuqy6GC4L%2B45enSav3y3jA%3D" 
-#define HOST          "iot-api.heclouds.com"
+/** 用户配置 **/
+#define HTTP_TASK1                  "OTA_check_version"
+#define HTTP_TASK2                  "OTA_download"
+
+#define HTTP_DATA_BUF_SIZE          550
+#define HTTP_HEADER_BUF_SIZE        50
+#define MAX_ERROR_NUM               3  // 重试次数
+#define MAX_TOKENS                  40
 
 
-void http_request(int type,char *url)
+static char http_flag;              // 标志位 
+                                    // 位0 开始一次处理
+                                    // 位1 备用
+                                    // 位2 备用
+                                    // 位3 0：当前有请求正在处理 1：处理结束  
+                                    // 位4 1：开始接收正文 
+                                    // 位5 1：正文接收完成 
+#define REQUEST_OK                  {http_flag |= BIT_3;}
+#define REQUEST_SENDED              {http_flag &= ~BIT_3;}
+static char report_ver;           
+
+/** 控制发送逻辑 **/
+static char request_index;          // 请求的索引
+static char* current_list;
+static char post_version_list[]={5};          // 发送版本的请求列表
+static char ota_update_list[]={1,2,3,4,5};    // OTA 升级的请求列表
+static char current_request[30];
+
+static char err_times;
+
+/** 处理回复 **/
+// 当前请求的数据缓存
+static char http_buf[HTTP_DATA_BUF_SIZE]; // HTTP 协议的正文 和 接收处理buf
+// 存储状态行信息
+static uint16_t stats_code;               // 状态码
+static uint8_t Content_Type;              // 正文类型  0：未知 1：json  2:octet-stream
+static uint16_t Content_len;              // 正文长度
+// 存储正文信息
+static char res_msg[12];
+static char target_version[24];
+static uint32_t tid;
+static uint32_t file_size;
+
+/** json数据处理 **/
+jsmn_parser parser;
+jsmntok_t tokens[MAX_TOKENS];
+
+
+
+// 进行一次复位，可以再次发送请求
+static void http_request_reset()
 {
+  // 缓存清理
+  memset(http_buf,0,HTTP_DATA_BUF_SIZE);
+  stats_code = 0;
+  Content_Type =0;
+  Content_len =0;
+  
+  // 清理必要的标志位
+  http_flag &= ~BIT_4;
+  http_flag &= ~BIT_5;
+}
 
+// 请求系统复位
+static void http_system_reset()
+{
+  // 清除接收buf 和 数据
+  http_request_reset();
+  
+  // 清理控制位
+  http_flag=0;
+  request_index =0;
+  
+  // 停止响应超时定时器
+  softTimer_stop(HTTP_REQUEST_ID);
+  
+  // 清除错误次数
+  err_times=0;
+  
+  // 可以发送一次请求
+  REQUEST_OK;
+}
+
+// http get 请求的基础函数
+static void http_get_request(char *url,char* Content_Type)
+{
+  http_request_reset();
+  if(esp32_link){
+    char http_request[512]={0};
+    char buf[256];
+    // 请求行
+    sprintf(buf,"GET %s HTTP/1.1\r\n",url);
+    strcat(http_request,buf);
+    // 协议头
+    sprintf(buf,"Content-Type:%s\r\n",Content_Type);
+    strcat(http_request,buf);
+    sprintf(buf,"Authorization:%s\r\n",IOT_AUTHORIZATION);
+    strcat(http_request,buf);
+    sprintf(buf,"host:%s\r\n",IOT_HOST);
+    strcat(http_request,buf);
+    // 空行
+    strcat(http_request,"\r\n");
+    
+    // 向服务器发送请求
+    esp32_send_IOT(http_request,strlen(http_request));
+  }else{
+    debug_info(INFO"Need to connect server");
+  }
+}
+
+// http post 请求的基础函数
+static void http_post_request(char *url)
+{
+  http_request_reset();
+  if(esp32_link){
+  
+  }else{
+    debug_info(INFO"Need to connect server");
+  }
+}
+
+// 处理一条有效的回复
+static void http_response_analysis(char *res)
+{
+  // 状态行
+  if(strstr(res,"HTTP/1.1")){
+    char *token = strtok(res, " ");
+    unsigned char k = 0;
+    while(token != NULL)
+    {
+      k++;
+      switch(k)
+      {
+        case 1: break;    // 协议
+        case 2: stats_code = atoi(token); break;
+        case 3: break;
+      }
+      token = strtok(NULL, " ");
+    }
+  }
+  // 正文类型
+  else if(strstr(res,"Content-Type")){
+    char* flag="Content-Type";
+    char* info=strstr(res,flag)+strlen(flag)+1;
+    // 获取内容
+    if(strstr(info,"application/json"))Content_Type=1;
+    else if(strstr(info,"application/octet-stream"))Content_Type=2;
+    else Content_Type=0;
+  }
+  // 正文长度 Content-Length: 183
+  else if(strstr(res,"Content-Length")){
+    char* flag="Content-Length";
+    char* info=strstr(res,flag)+strlen(flag)+1;
+    // 获取内容
+    Content_len = atoi(info);
+  }
+  else{
+    debug("res:%s not process\r\n",res);
+  }
+}
+
+// http请求的数据结果
+// 这里仅仅缓存 返回信息
+// 在ESP32 的应用循环中回调
+int http_data_handle(char *buf,uint16_t len)
+{
+  /** 条件判断 **/
+  // 当前 指令处理缓存 空间足够
+  if(strlen(http_buf)+len>HTTP_DATA_BUF_SIZE){
+    debug_err(ERR"http_buf not enough space\r\n");
+    http_request_reset();
+    return -1;
+  }
+  strncat(http_buf,buf,len);
+  
+  // 产生一次 请求 接收完成 
+  if(Content_len){
+    if(strlen(http_buf)==Content_len)
+      http_flag |= BIT_5;
+  }
+  
+  /** 接收正文 **/
+  if(http_flag & BIT_4)return 0;
+  
+  /** 处理状态行和协议头 **/
+  char cycle_counts=0;
+  while(!(http_flag & BIT_4)){
+    char* substring=strstr(http_buf,"\r\n");
+    int vaild_len=strlen(http_buf);
+    if(substring==NULL)break;
+
+    /** 循环检测 **/
+    cycle_counts++;
+    if(cycle_counts > 6){
+      debug_err(ERR"cycles exceeded,buf:%s,sub:%s\r\n",
+                http_buf,substring);
+      http_request_reset();
+      return -1;
+    }
+    
+    /** 去除多余字符 **/
+    substring[0]=0;                       // 获取一个指令
+    char *valid_reply=http_buf;           // 得到一条有效回复
+    int offset=strlen(valid_reply)+2;      
+
+    /** 处理状态行和协议头 **/
+    if(strlen(valid_reply)>0)
+      http_response_analysis(valid_reply);
+    else http_flag|=BIT_4;               // 开始接收正文
+
+    /** 删除此条有效回复 **/
+    leftShiftCharArray(http_buf,vaild_len,offset);
+  }
+  return 0;
+}
+
+// 向服务器发送检查版本请求 任务1
+void OTA_check_version(void)
+{
+  if(sys_parameter.parameter_flag!=FLAG_OK){
+    debug_err(ERR"sys_parameter error!");
+    return;
+  }
+  char url[150];
+  sprintf(url,"http://iot-api.heclouds.com/fuse-ota/%s/check?type=1&version=%s",
+      IOT_PRO_ID_NAME,sys_parameter.app2_fw_version);
+  http_get_request(url,"application/json");
+  strcpy(current_request,HTTP_TASK1);
+}
+
+// 向服务器发送当前版本
+void OTA_POST_version(void)
+{
+//  if(sys_parameter.parameter_flag!=FLAG_OK){
+//    debug_err(ERR"sys_parameter error!");
+//    return;
+//  }
+//  char url[150];
+//  sprintf(url,"http://iot-api.heclouds.com/fuse-ota/%s/check?type=1&version=%s",
+//      IOT_PRO_ID_NAME,sys_parameter.app2_fw_version);
+//  http_get_request(url,"application/json");
+}
+
+// 进行 http 请求的处理函数
+// 包含进行 版本上传 和 OTA更新固件
+static int http_request_handle(void)
+{
+  // 控制位 
+  if(!(http_flag & BIT_0))return 0;
+  
+  // 命令能够发送标志位
+  if(!(http_flag & BIT_3))return 0;
+  
+  // 判断索引正确性 并 获取
+  if(request_index >= strlen(current_list)){
+    debug_err(ERR"index error!\r\n");
+    return -1;
+  }
+  char cmd_id = current_list[request_index];
+  // 开始发送命令
+  switch(cmd_id){
+    case 0:{
+      /* OTA_check_version */
+      OTA_check_version();
+      softTimer_start(HTTP_REQUEST_ID,2000);
+    }break;
+    case 1:{
+      /*  */
+
+      softTimer_start(HTTP_REQUEST_ID,2000);
+    }break;
+    case 2:{
+      /*  */
+
+      softTimer_start(HTTP_REQUEST_ID,2000);    // 默认连接超时为15s
+    }break;
+    case 3:{
+      /* AT+CIPMODE=1 */
+      
+      softTimer_start(HTTP_REQUEST_ID,2000);
+    }break;  
+    case 4:{
+      /*  */
+
+      softTimer_start(HTTP_REQUEST_ID,2000);
+    }break;
+    case 5:{
+
+      softTimer_start(HTTP_REQUEST_ID,2000);
+    }break;
+    case 6:{
+
+      debug_info(INFO"CONNECT SUCCESS!\r\n");
+    }return 1;
+    default:{
+      http_system_reset();
+      debug_err(ERR"instruction exceeeded!\r\n");
+    }break;
+  }
+  REQUEST_SENDED;
+  request_index++; 
+  return 0;
+}
+
+// 进行重试
+static void http_request_retry(void)
+{
+  err_times++; 
+  request_index--; 
+  if(err_times>=MAX_ERROR_NUM){ 
+    debug_err(ERR"Attempts Exceeded\r\n"); 
+    http_system_reset(); 
+  } 
+  else REQUEST_OK;
+}
+
+
+// 编写在原始json数据中的字符串比较函数
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s) 
+{
+  if(tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&
+    strncmp(json + tok->start, s, tok->end - tok->start) == 0) return 0;
+  return -1;
+}
+
+// 处理 http 的响应
+// http 请求的情况1
+static void http_respond_handle(void)
+{
+  if(!(http_flag & BIT_5)) return ;
+  
+  char temp[50]={0};
+  /* 开始进行响应数据处理 */
+  if(strstr(current_request,HTTP_TASK1)){
+    // 处理 检查升级任务
+    int r = jsmn_parse(&parser, http_buf, strlen(http_buf), tokens, MAX_TOKENS);
+    if(r>1){
+      // 获取JSON中的对象数据
+      for (int i = 1; i < r; i++) {
+        // 获取 JSON 对象位置信息
+        char *p =http_buf + tokens[i + 1].start;
+        int len = tokens[i + 1].end - tokens[i + 1].start;
+        if (jsoneq(http_buf, &tokens[i], "msg") == 0) {
+          if(len < sizeof(res_msg)){
+            memcpy(res_msg, p, len);res_msg[len]='\0';
+          }
+          else debug_err(ERR"buf not space\r\n");
+          i++;
+        } else if (jsoneq(http_buf, &tokens[i], "target") == 0) {
+          if(len < sizeof(target_version)){
+            memcpy(target_version, p, len);target_version[len]='\0';
+          }
+          else debug_err(ERR"buf not space\r\n");
+          i++;
+        } else if (jsoneq(http_buf, &tokens[i], "tid") == 0) {
+          memcpy(temp, p, len);temp[len]='\0';
+          tid = atoi(temp);
+          i++;
+        } else if (jsoneq(http_buf, &tokens[i], "size") == 0) {
+          memcpy(temp, p, len);temp[len]='\0';
+          file_size = atoi(temp);
+          i++;
+        } 
+      }
+      // 根据信息处理下一步
+      printf("%s\r\n",res_msg);
+      printf("%s\r\n",target_version);
+      printf("%d\r\n",tid);
+      printf("%d\r\n",file_size);
+    }
+    else http_request_retry();
+  }
+  else if(strstr(current_request,HTTP_TASK2)){
+  
+  
+  }
+  
+  
+  // 一个请求处理结束
+  http_request_reset();
+}
+
+// http 请求超时
+// 通常一个请求响应会比较快，超时则进行重试
+// http 请求的情况2
+static void http_request_timeout()
+{
+  debug_war(WARNING"<%s> request timeout:\r\n",current_request);
+  http_request_retry();
+}
+
+
+// 进行 ota 升级系统的初始化
+void OTA_system_init(void)
+{
+  jsmn_init(&parser);
+  softTimer_create(HTTP_REQUEST_ID,MODE_ONE_SHOT,http_request_timeout);
+  http_system_reset();     // 首次复位
+}
+
+// 应用处理循环
+void OTA_system_loop(void)
+{
+  http_request_handle();
+  http_respond_handle();
+}
+
+// 主动上报一次版本
+void OTA_report_hw_version(void)
+{
+  if(!report_ver){
+  
+    
+  }
 }

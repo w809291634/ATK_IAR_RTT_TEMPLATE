@@ -20,17 +20,17 @@
 #define TARGET                      "ESP32"
 #define CMD_OK                      {esp32_flag |= BIT_3;}
 #define CMD_SENDED                  {esp32_flag &= ~BIT_3;}
-#define MAX_ERROR_NUM               2  // 命令重试次数
+#define MAX_ERROR_NUM               3  // 命令重试次数
 
 static char recv_buf[RECV_CMD_BUF_SIZE];
-static char send_cmd_count;        // 发送命令的计数
-static char esp32_flag;            // esp32的标志位 
-                                   // 位0 进行连接服务器
-                                   // 位1 备用
-                                   // 位2 备用
-                                   // 位3 0：当前命令正在处理 1：处理结束  
-                                   // 位4 备用
-static char esp32_link;            // 已经连接服务器并进入透传
+static char send_cmd_count;         // 发送命令的计数
+static char esp32_flag;             // esp32的标志位 
+                                    // 位0 进行连接服务器
+                                    // 位1 备用
+                                    // 位2 备用
+                                    // 位3 0：当前命令正在处理 1：处理结束  
+                                    // 位4 备用
+char esp32_link;                    // 已经连接服务器并进入透传
 static char err_times;
 
 static const char* cmd_list[]={ "ATE0","AT+CWMODE","AT+CWJAP",        
@@ -231,7 +231,7 @@ static void esp32_reply_analysis(char* valid_reply)
   }
   // 当前回复没有处理
   else{
-    debug_err("valid_reply:%s not processed\r\n",valid_reply);
+    debug_err("reply:%s not process\r\n",valid_reply);
   }
 }
 
@@ -241,7 +241,7 @@ int esp32_command_handle(char* buf,unsigned short len)
   /** 单独处理透传命令 **/
   if(strchr(buf,'>') && strstr(current_cmd,"AT+CIPSEND")){
     leftShiftCharArray(buf,len,1);
-    debug_at(ESP32_RES"%c\r\n",'>');
+    debug_at(ESP32_RES">\r\n");
     CMD_OK;
   }
 
@@ -264,7 +264,7 @@ int esp32_command_handle(char* buf,unsigned short len)
     // 循环检测
     cycle_counts++;
     if(cycle_counts > 6){
-      debug_err(ERR"recv_cmd_buf processing cycles exceeded,recv_cmd_buf:%s,substring:%s\r\n",
+      debug_err(ERR"cycles exceeded,buf:%s,sub:%s\r\n",
                 recv_buf,substring);
       esp32_cmd_handle_reset();
       return -1;
@@ -276,10 +276,8 @@ int esp32_command_handle(char* buf,unsigned short len)
     int offset=strlen(valid_reply)+2;      
     
     /** 处理有效回复 **/
-    if(strlen(valid_reply)>0){
-      debug("valid_reply:%s\r\n",valid_reply);
+    if(strlen(valid_reply)>0)
       esp32_reply_analysis(valid_reply);
-    }
 
     /** 删除此条有效回复 **/
     leftShiftCharArray(recv_buf,vaild_len,offset);
@@ -287,7 +285,9 @@ int esp32_command_handle(char* buf,unsigned short len)
   return 0;
 }
 
-// at 命令 处理结果2 发送命令超时
+// at 命令 处理结果2 发送命令超时.
+// 一般一个AT指令都会有回复，如果没有回复，可能等待时间不够，或者通讯错误。
+// 这里不再进行重试，只有回复了才能够重试，重试在 esp32_reply_analysis 函数中处理
 static void esp32_send_cmd_timeout()
 {
   esp32_cmd_handle_reset();
@@ -297,8 +297,8 @@ static void esp32_send_cmd_timeout()
 // 进行连接
 static void _esp32_connect_start(void){
   // 首次使用请设置 wifi 连接参数
-  if(sys_parameter.wifi_flag!=FLAG_OK){
-    debug_info(INFO"Please use %s cmd set wifi parameter!\r\n",ESP_SET_SSID_PASS_CMD);
+  if(sys_parameter.parameter_flag!=FLAG_OK){
+    debug_err(ERR"sys_parameter error!");
     return;
   }
   
@@ -308,7 +308,7 @@ static void _esp32_connect_start(void){
     esp32_flag|=BIT_0;
   }
   else{
-    debug_info(INFO"ESP32 connecting ap\r\n");
+    debug_info(INFO"ESP32 connecting\r\n");
   }
 }
 
@@ -343,7 +343,7 @@ void esp32_at_app_init(void)
 // esp32_at 应用周期循环函数
 void esp32_at_app_cycle(void)
 {
-  esp32_connect_server_handle();    // 控制连接esp32连接AP
+  esp32_connect_server_handle();    // 控制连接esp32连接服务器
   esp32_usart_data_handle();        // 周期处理串口数据
 }
 

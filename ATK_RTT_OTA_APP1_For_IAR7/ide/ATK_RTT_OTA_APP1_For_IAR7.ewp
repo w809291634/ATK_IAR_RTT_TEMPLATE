@@ -612,11 +612,11 @@
         </option>
         <option>
           <name>OCOutputOverride</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>ATK_RTT_OTA_For_IAR7.bin</state>
+          <state>ATK_OTA_APP1.bin</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -2213,9 +2213,6 @@
       </group>
     </group>
   </group>
-  <file>
-    <name>$PROJ_DIR$\..\..\ATK_CONFIG\config.h</name>
-  </file>
   <file>
     <name>$PROJ_DIR$\..\src\main.c</name>
   </file>

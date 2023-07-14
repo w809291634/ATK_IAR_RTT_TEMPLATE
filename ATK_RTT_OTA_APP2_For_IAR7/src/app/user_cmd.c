@@ -1,5 +1,5 @@
 #include "user_cmd.h"
-#include "config.h"
+#include "board.h"
 #include "flash.h"
 #include <rthw.h>
 #include <rtdevice.h>

@@ -55,7 +55,7 @@ uint32_t STMFLASH_Write(uint32_t WriteAddr,uint32_t* pBuffer,uint32_t NumToWrite
       end_addr > ADDR_FLASH_SYSTEM_MEM ||    // 终止地址检查
       addrx % 4 
       ){
-        rt_kprintf(ERR"STMFLASH_Write Address error! addrx:0x%08x\r\n",addrx);
+        rt_kprintf("STMFLASH_Write Address error! addrx:0x%08x\r\n",addrx);
     return 0;
   }
   
@@ -74,7 +74,7 @@ uint32_t STMFLASH_Write(uint32_t WriteAddr,uint32_t* pBuffer,uint32_t NumToWrite
       FlashEraseInit.VoltageRange=FLASH_VOLTAGE_RANGE_3;      //电压范围，VCC=2.7~3.6V之间!!
       if(HAL_FLASHEx_Erase(&FlashEraseInit,&SectorError)!=HAL_OK) 
       {
-        rt_kprintf(ERR"FLASH_EraseSector error! Sector_num:0x%04x\r\n",Sector_num);
+        rt_kprintf("FLASH_EraseSector error! Sector_num:0x%04x\r\n",Sector_num);
         break;//发生错误了	
       }
     }else addrx+=4;
@@ -88,7 +88,7 @@ uint32_t STMFLASH_Write(uint32_t WriteAddr,uint32_t* pBuffer,uint32_t NumToWrite
     {
       if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,WriteAddr,*pBuffer)!=HAL_OK)// 写入数据
       { 
-        rt_kprintf(ERR"FLASH_ProgramWord error! WriteAddr:0x%08x\r\n",WriteAddr);
+        rt_kprintf("FLASH_ProgramWord error! WriteAddr:0x%08x\r\n",WriteAddr);
         return word_num;
       }
       WriteAddr+=4;
@@ -134,10 +134,10 @@ void STMFLASH_Read_Write_test(uint32_t start_add,uint32_t end_add)
     int write_len=STMFLASH_Write(start_add,(uint32_t*)TEXT_Buffer,SIZE);
     STMFLASH_Read(start_add,(uint32_t*)datatemp,SIZE);
     if(memcmp(datatemp,TEXT_Buffer,TEXT_LENTH)==0){
-      rt_kprintf(INFO"STMFLASH_Read Success,start_add:0x%08x writelen:%d str:%s\r\n",start_add,write_len,datatemp);
+      rt_kprintf("STMFLASH_Read Success,start_add:0x%08x writelen:%d str:%s\r\n",start_add,write_len,datatemp);
     }
     else{
-      rt_kprintf(ERR"STMFLASH_Read_Write_test error!\r\n");
+      rt_kprintf("STMFLASH_Read_Write_test error!\r\n");
       break;
     }
     start_add+=SIZE*4;
@@ -148,9 +148,11 @@ void STMFLASH_Read_Write_test(uint32_t start_add,uint32_t end_add)
 // 写系统参数
 void write_sys_parameter()
 {
+  sys_parameter.parameter_flag=FLAG_OK;
   if(SYS_PARAMETER_WORD_SIZE<=SYS_PARAMETER_SIZE/4 && SYS_PARAMETER_WORD_SIZE==SYS_PARAMETER_WRITE){
-    rt_kprintf(INFO"System Parameter Write Success!\r\n");
+    rt_kprintf("System Parameter Write Success!\r\n");
   }else{
-    rt_kprintf(ERR"System Parameter Write Failed!");
+    sys_parameter.parameter_flag=FLAG_NOK;
+    rt_kprintf("System Parameter Write Failed!");
   }
 }

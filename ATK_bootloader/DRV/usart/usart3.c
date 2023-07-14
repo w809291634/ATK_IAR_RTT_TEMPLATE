@@ -1,6 +1,7 @@
 #include "sys.h"
 #include "usart3.h"	
 #include "esp32_at.h"
+#include "ota.h"
 
 /**************************user config*************************/
 // 定义控制台调试串口的硬件
@@ -94,11 +95,13 @@ void esp32_usart_data_handle()
     uint16_t data_len=UART_GetRemainDate(temp,esp32_at_ringbuf,USARTx_RINGBUF_SIZE,Write_Index,Read_Index);
     
     /* 接收并处理此处数据 */
-    int ret=esp32_command_handle(temp,data_len);        // 回调应用层的数据处理函数
-    if(ret==-1){
-      debug_err(ERR"Read_Index:%d usart3_data:%s\r\n",Read_Index,temp);
+    if(esp32_link)http_data_handle(temp,data_len);
+    else{
+      int ret=esp32_command_handle(temp,data_len);        // 回调应用层的数据处理函数
+      if(ret==-1)
+        debug_err(ERR"Read_Index:%d usart3_data:%s\r\n",Read_Index,temp);
     }
-    
+
     /* 数据处理结束 */
     Read_Index = (Read_Index+data_len)% USARTx_RINGBUF_SIZE;          // 下次读取数据的起始位置，防止超出缓存区最大索引   
   }

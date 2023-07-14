@@ -1,5 +1,6 @@
 #include "sys.h"
 #include "usart1.h"
+#include "flash.h"
 
 //标准库需要的支持函数                 
 struct __FILE 
@@ -54,6 +55,18 @@ void leftShiftCharArray(char* arr, int size, int shiftAmount)
 {
   memmove(arr, arr + shiftAmount, (size - shiftAmount) * sizeof(char));
   memset(arr + size - shiftAmount, 0, shiftAmount * sizeof(char));
+}
+
+// 系统参数恢复默认值
+void sys_parameter_init(void)
+{
+  if(sys_parameter.parameter_flag!=FLAG_OK){
+    strcpy(sys_parameter.wifi_ssid,WIFI_SSID);
+    strcpy(sys_parameter.wifi_pwd,WIFI_PASSWD);
+    strcpy(sys_parameter.app1_fw_version,SYS_FW_VERSION);
+    strcpy(sys_parameter.app2_fw_version,SYS_FW_VERSION);
+    write_sys_parameter();
+  }
 }
 
 #ifdef  USE_FULL_ASSERT
