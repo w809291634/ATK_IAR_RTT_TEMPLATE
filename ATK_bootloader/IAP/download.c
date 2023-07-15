@@ -13,6 +13,11 @@ void IAP_download(void)
   uint32_t timeout=30*1000;
   int32_t errarr[MAX_ERRORS]={0};
   
+  if(updating==1){
+    debug_war(WARNING"updating in progress!\r\n");
+    goto RESET;
+  }
+  
   if(download_part==1){
     /* 分区1 */
     partition_start=APP1_START_ADDR;
@@ -28,7 +33,8 @@ void IAP_download(void)
   }
   
   /* 进入下载模式 */
-  printf("The current download partition is app%d,start_address:0x%08x,size:%d Bytes\n\r",
+  updating=1;
+  printf("download partition is app%d,start:0x%08x,size:%d Bytes\n\r",
      download_part,partition_start,partition_size);
   printf("Waiting for the file to be sent ... (press 'a' key to exit IAP mode)\n\r");
   
@@ -62,5 +68,6 @@ void IAP_download(void)
 RESET:
   /* 进入控制台模式 */
   usart1_mode=0;
+  updating=0;
 }
 

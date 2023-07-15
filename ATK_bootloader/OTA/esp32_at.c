@@ -158,8 +158,10 @@ static void esp32_reply_analysis(char* valid_reply)
     // 显示
     debug_at(ESP32_RES"%s\r\n",valid_reply);
     // 处理内容 
-    if(strstr(current_cmd,"AT+CIPSEND")==NULL)
+    if(strstr(current_cmd,"AT+CIPSEND")==NULL){
       CMD_OK;
+      err_times=0;
+    } 
   }
   // 显示错误
   else if(strstr(valid_reply, "ERROR")){   
@@ -298,7 +300,7 @@ static void esp32_send_cmd_timeout()
 static void _esp32_connect_start(void){
   // 首次使用请设置 wifi 连接参数
   if(sys_parameter.parameter_flag!=FLAG_OK){
-    debug_err(ERR"sys_parameter error!");
+    debug_err(ERR"sys_parameter error!\r\n");
     return;
   }
   

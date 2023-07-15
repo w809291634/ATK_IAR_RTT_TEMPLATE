@@ -3,6 +3,7 @@
 #include "flash.h"
 
 uint8_t download_part;
+uint8_t updating;
 
 //标准库需要的支持函数                 
 struct __FILE 

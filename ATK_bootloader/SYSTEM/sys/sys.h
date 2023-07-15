@@ -8,6 +8,7 @@
 #include "stdio.h"
 
 extern uint8_t download_part;
+extern uint8_t updating;
 
 /** debug 层控制 **/
 // 0xff 显示所有层的信息
