@@ -38,7 +38,6 @@ static char report_ver;
 static char request_index;          // 请求的索引
 static char current_request[30];
 static char err_times;
-
 static uint8_t* current_list;
 static uint8_t post_version_list[]={5,0xff};          // 发送版本的请求列表
 static uint8_t ota_update_list[]={1,2,3,4,5,0xff};    // OTA 升级的请求列表
@@ -50,7 +49,7 @@ static uint16_t http_buf_len;
 static uint16_t stats_code;               // 状态码
 static uint8_t Content_Type;              // 正文类型  0：未知 1：json  2:octet-stream
 static uint16_t Content_len;              // 正文长度
-static char file_name[50];              // 正文长度
+static char file_name[50];                // 正文长度
 // 存储正文信息
 static char res_msg[12];
 static char target_version[24];
@@ -222,7 +221,7 @@ int http_data_handle(char *buf,uint16_t len)
   // 当前 指令处理缓存 空间足够
   if(http_buf_len+len > HTTP_DATA_BUF_SIZE){
     debug_err(ERR"http_buf not enough space\r\n");
-    http_request_reset();
+    http_system_reset();
     return -1;
   }
   memcpy(http_buf+http_buf_len,buf,len);
@@ -230,10 +229,8 @@ int http_data_handle(char *buf,uint16_t len)
   
   // 产生一次 请求 接收完成 
   if(http_flag & BIT_4){
-    if(http_buf_len == Content_len){
-      printf("Content_len:%d buf_len:%d\r\n",Content_len,http_buf_len);
+    if(http_buf_len == Content_len)
       http_flag |= BIT_5;
-    }
   }
   
   /** 接收正文 **/
@@ -296,11 +293,6 @@ static void OTA_download_package(char* range)
   http_get_request(url,"application/json",range);
 }
 
-
-
-
-
-
 // 向服务器发送当前版本
 void OTA_POST_version(void)
 {
@@ -318,6 +310,8 @@ void OTA_POST_version(void)
 // 包含进行 版本上传 和 OTA更新固件
 static int http_request_handle(void)
 {
+  if(esp32_link!=1) return 0;
+  
   // 控制位 
   if(!(http_flag & BIT_0))return 0;
   
@@ -347,7 +341,7 @@ static int http_request_handle(void)
       softTimer_start(HTTP_REQUEST_ID,5000);
     }break;
     case 3:{
-      /* AT+CIPMODE=1 */
+      /*  */
       
       softTimer_start(HTTP_REQUEST_ID,5000);
     }break;  
@@ -372,7 +366,6 @@ static int http_request_handle(void)
     }break;
   }
   REQUEST_SENDED;
-  request_index++; 
   return 0;
 }
 
@@ -383,7 +376,6 @@ static void http_request_retry(void)
   if(!(http_flag & BIT_0))return;
   
   err_times++; 
-  request_index--; 
   if(err_times>=MAX_ERROR_NUM){ 
     debug_err(ERR"Attempts Exceeded\r\n"); 
     http_system_reset(); 
@@ -405,7 +397,8 @@ static void http_respond_handle(void)
 {
   // 控制位 
   if(!(http_flag & BIT_0)) return;
-  if(!(http_flag & BIT_5)) return ;
+  
+  if(!(http_flag & BIT_5)) return;
   
   char temp[50]={0};
   /* 开始进行响应数据处理 */
@@ -492,8 +485,9 @@ static void http_respond_handle(void)
         FLASH_Lock();                             // 上锁
         
         // 可以发送下一次请求
-        REQUEST_OK;
         err_times=0;
+        REQUEST_OK;
+        request_index++; 
       }else http_request_retry();    
     }else http_request_retry();
   }
@@ -528,21 +522,29 @@ static void http_respond_handle(void)
     // 处理结果
     if(FlashDestination >= ota_partition_start + file_size){
       debug_ota(HTTP_RECV"Progress 100%%\r\n");
-      debug_ota("Name: %s \r\n",(char*)file_name);
-      debug_ota("Size: %d Bytes\r\n",file_size);
+      debug_ota("OTA update Successfully!FW version:%s\r\n",target_version);
+      debug("Name: %s \r\n",(char*)file_name);
+      debug("Size: %d Bytes\r\n",file_size);
       // 写标志
-      if(download_part==1) sys_parameter.app1_flag=APP_OK;
-      else if(download_part==2) sys_parameter.app2_flag=APP_OK;
+      if(download_part==1) {
+        strcpy(sys_parameter.app1_fw_version,target_version);
+        sys_parameter.app1_flag=APP_OK;
+      }
+      else if(download_part==2) {
+        sys_parameter.app2_flag=APP_OK;
+      }
       write_sys_parameter();
       
       // 更新完成
       REQUEST_OK;
+      request_index++; 
+      http_system_reset();
     }else{
       // 继续下载
       ota_fragment++;
       debug_ota(HTTP_RECV"Progress %.2f%%\r\n",(double)ota_fragment / (double)ota_total_fragment * 100);
-      request_index--;
       REQUEST_OK;
+      err_times=0;
     }
   }
 
@@ -587,6 +589,8 @@ void OTA_report_hw_version(void)
 // 进行一次 OTA 更新
 void OTA_update_start(void)
 {
+  if(esp32_link!=1)return ;
+    
   // 判断是否正在进行更新
   if(updating==1){
     debug_war(WARNING"updating in progress!\r\n");
