@@ -8,6 +8,7 @@
 #include "sys.h"
 #include "user_cmd.h"
 #include "led.h"
+#include "ota.h"
 
 // 复位引脚 PF6
 #define ESP32_RESET_GPIO          GPIOF
@@ -131,6 +132,10 @@ static int esp32_connect_server_handle(void)
       esp32_link=1;
       LED1=0;
       debug_info(INFO"CONNECT SUCCESS!\r\n");
+      
+      // 可以开始HTTP请求 默认上报一号分区
+      download_part=1;
+      OTA_mission_start(0);
     }return 1;
     default:{
       esp32_cmd_handle_reset();

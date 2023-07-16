@@ -2,13 +2,6 @@
 #define __SYS_CONFIG_H__
 #include "stm32f4xx.h"
 
-/** 服务器 **/
-#define IOT_PRO_ID_NAME         "m5005irgK9/stm32_temperature"
-#define IOT_SERVER_IP           "iot-api.heclouds.com"
-#define IOT_SERVER_PORT         80
-#define IOT_AUTHORIZATION       "version=2022-05-01&res=userid%2F315714&et=1720619752&method=sha1&sign=GG%2FUnpuqy6GC4L%2B45enSav3y3jA%3D" 
-#define IOT_HOST                "iot-api.heclouds.com"
-
 /** 系统参数初始值 **/
 #define WIFI_SSID               "Xiaomi_B596"
 #define WIFI_PASSWD             "WH15572388670LOL"
