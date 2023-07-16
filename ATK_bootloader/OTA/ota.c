@@ -19,7 +19,7 @@
 #define HTTP_DATA_BUF_SIZE          550
 #define HTTP_HEADER_BUF_SIZE        50
 #define MAX_ERROR_NUM               3  // 重试次数
-#define MAX_TOKENS                  300
+#define MAX_TOKENS                  40
 #define FRAGMENT_SIZE               512  // 数据包大小
 #define HTTP_SEND                   "ONENET<--"
 #define HTTP_RECV                   "ONENET-->"
@@ -321,7 +321,7 @@ static void OTA_download_package(char* range)
 }
 
 // 向服务器上报升级状态 任务3
-void OTA_POST_status(void)
+static void OTA_POST_status(void)
 {
   char url[150];
   char Content[20];
@@ -333,7 +333,7 @@ void OTA_POST_status(void)
 }
 
 // 检测升级状态 任务4
-void OTA_check_status(void)
+static void OTA_check_status(void)
 {
   char url[150];
   sprintf(url,"%s/%s/%d/check",
@@ -342,7 +342,7 @@ void OTA_check_status(void)
 }
 
 // 查看设备版本号 任务5
-void OTA_check_version(void)
+static void OTA_check_version(void)
 {
   char url[150];
   sprintf(url,"%s/%s/version",
@@ -351,7 +351,7 @@ void OTA_check_version(void)
 }
 
 // 上报设备版本号 任务6
-void OTA_POST_version(void)
+static void OTA_POST_version(void)
 {
   char url[150];
   char Content[70];
