@@ -19,7 +19,7 @@
 #define HTTP_DATA_BUF_SIZE          550
 #define HTTP_HEADER_BUF_SIZE        50
 #define MAX_ERROR_NUM               3  // 重试次数
-#define MAX_TOKENS                  40
+#define MAX_TOKENS                  300
 #define FRAGMENT_SIZE               512  // 数据包大小
 #define HTTP_SEND                   "ONENET<--"
 #define HTTP_RECV                   "ONENET-->"
@@ -260,8 +260,7 @@ int http_data_handle(char *buf,uint16_t len)
   
   // 产生一次 请求 接收完成 
   if(http_flag & BIT_4){
-    if(http_buf_len == Content_len)
-      http_flag |= BIT_5;
+    if(http_buf_len >= Content_len) http_flag |= BIT_5; 
   }
   
   /** 接收正文 **/
@@ -293,10 +292,12 @@ int http_data_handle(char *buf,uint16_t len)
       http_response_analysis(valid_reply);
     else  http_flag|=BIT_4;               // 开始接收正文
 
-
     /** 删除此条有效回复 **/
     leftShiftCharArray(http_buf,vaild_len,offset);
     http_buf_len = http_buf_len - offset;
+    
+    // 进行一次判断
+    if(http_buf_len >= Content_len && http_flag & BIT_4) http_flag |= BIT_5;
   }
   return 0;
 }
@@ -471,6 +472,7 @@ static void http_respond_handle(void)
   if(!(http_flag & BIT_5)) return;
   
   char temp[50]={0};
+  
   /* 开始进行响应数据处理 */
   // 处理 检查升级任务
   if(strstr(current_request,OTA_TASK1)){
@@ -481,7 +483,8 @@ static void http_respond_handle(void)
     }
     
     // 获取JSON中的对象数据
-    int r = jsmn_parse(&parser, http_buf, strlen(http_buf), tokens, MAX_TOKENS);
+    jsmn_init(&parser);
+    int r = jsmn_parse(&parser, http_buf, http_buf_len, tokens, MAX_TOKENS);
     if(r>0){
       for (int i = 1; i < r; i++) {
         // 获取 JSON 对象位置信息
@@ -631,6 +634,7 @@ static void http_respond_handle(void)
     }
     
     // 获取JSON中的对象数据
+    jsmn_init(&parser);
     int r = jsmn_parse(&parser, http_buf, strlen(http_buf), tokens, MAX_TOKENS);
     if(r>0){
       for (int i = 1; i < r; i++) {
@@ -667,6 +671,7 @@ static void http_respond_handle(void)
     
     // 获取JSON中的对象数据
     int _status_code;
+    jsmn_init(&parser);
     int r = jsmn_parse(&parser, http_buf, strlen(http_buf), tokens, MAX_TOKENS);
     if(r>0){
       for (int i = 1; i < r; i++) {
@@ -707,6 +712,7 @@ static void http_respond_handle(void)
     }
     
     // 获取JSON中的对象数据
+    jsmn_init(&parser);
     int r = jsmn_parse(&parser, http_buf, strlen(http_buf), tokens, MAX_TOKENS);
     if(r>0){
       for (int i = 1; i < r; i++) {
@@ -747,6 +753,7 @@ static void http_respond_handle(void)
     }
     
     // 获取JSON中的对象数据
+    jsmn_init(&parser);
     int r = jsmn_parse(&parser, http_buf, strlen(http_buf), tokens, MAX_TOKENS);
     if(r>0){
       for (int i = 1; i < r; i++) {

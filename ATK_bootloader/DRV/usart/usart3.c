@@ -101,7 +101,7 @@ void esp32_usart_data_handle()
       if(ret==-1)
         debug_err(ERR"Read_Index:%d usart3_data:%s\r\n",Read_Index,temp);
     }
-
+    
     /* 数据处理结束 */
     Read_Index = (Read_Index+data_len)% USARTx_RINGBUF_SIZE;          // 下次读取数据的起始位置，防止超出缓存区最大索引   
   }
