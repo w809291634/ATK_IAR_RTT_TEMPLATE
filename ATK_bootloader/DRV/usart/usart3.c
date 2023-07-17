@@ -1,6 +1,6 @@
 #include "sys.h"
 #include "usart3.h"	
-#include "esp32_at.h"
+#include "esp32_8266_at.h"
 #include "ota.h"
 
 /**************************user config*************************/
@@ -95,9 +95,9 @@ void esp32_usart_data_handle()
     uint16_t data_len=UART_GetRemainDate(temp,esp32_at_ringbuf,USARTx_RINGBUF_SIZE,Write_Index,Read_Index);
     
     /* 接收并处理此处数据 */
-    if(esp32_link)http_data_handle(temp,data_len);
+    if(esp32_link)http_data_handle(temp,data_len);        // esp32 的http请求数据处理
     else{
-      int ret=esp32_command_handle(temp,data_len);        // 回调应用层的数据处理函数
+      int ret=esp32_command_handle(temp,data_len);        // esp32 的AT指令回调
       if(ret==-1)
         debug_err(ERR"Read_Index:%d usart3_data:%s\r\n",Read_Index,temp);
     }

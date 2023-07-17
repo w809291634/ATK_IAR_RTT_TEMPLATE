@@ -539,14 +539,14 @@
           <GroupName>OTA</GroupName>
           <Files>
             <File>
-              <FileName>esp32_at.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\OTA\esp32_at.c</FilePath>
-            </File>
-            <File>
               <FileName>ota.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\OTA\ota.c</FilePath>
+            </File>
+            <File>
+              <FileName>esp32_8266_at.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\OTA\esp32_8266_at.c</FilePath>
             </File>
           </Files>
         </Group>

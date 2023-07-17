@@ -8,7 +8,7 @@
 #include "jsmn.h"
 #include "flash.h"
 
-/** 用户配置 **/
+/** 任务名配置 **/
 #define OTA_TASK1                  "OTA_check_update"
 #define OTA_TASK2                  "OTA_download"
 #define OTA_TASK3                  "OTA_POST_status"
@@ -16,6 +16,7 @@
 #define OTA_TASK5                  "OTA_check_version"
 #define OTA_TASK6                  "OTA_POST_version"
 
+/** 用户配置 **/
 #define HTTP_DATA_BUF_SIZE          550
 #define HTTP_HEADER_BUF_SIZE        50
 #define MAX_ERROR_NUM               3  // 重试次数
@@ -48,6 +49,7 @@ static char err_times;
 static uint8_t* current_list;
 static uint8_t post_version_list[]={6,0xff};            // 发送版本的请求列表
 static uint8_t ota_update_list[]={1,2,3,4,5,6,0xff};    // OTA 升级的请求列表
+static uint8_t onenet_res;
 /** 处理回复 **/
 // 当前请求的数据缓存
 static char http_buf[HTTP_DATA_BUF_SIZE]; // HTTP 协议的正文 和 接收处理buf
@@ -71,8 +73,8 @@ static uint16_t ota_total_fragment;
 static uint32_t FlashDestination;
 
 /** json数据处理 **/
-jsmn_parser parser;
-jsmntok_t tokens[MAX_TOKENS];
+static jsmn_parser parser;
+static jsmntok_t tokens[MAX_TOKENS];
 
 // esp32发送数据到服务器
 static void esp32_send_IOT(const char * strbuf, unsigned short len)
@@ -80,6 +82,7 @@ static void esp32_send_IOT(const char * strbuf, unsigned short len)
   if(esp32_link){
     usart3_puts(strbuf,len);
     debug_ota(HTTP_SEND"%s\r\n",current_request);
+    onenet_res=1;
   }
 }
 
@@ -193,7 +196,10 @@ static void http_post_request(char *url,char* Content_Type,char* Content,int Con
   }
 }
 
-// 处理一条有效的回复
+/***********************************************
+*  http 的请求返回数据处理，处理状态行和接收正文
+***********************************************/
+// 处理 HTTP 的返回的状态行
 static void http_response_analysis(char *res)
 {
   // 状态行
@@ -228,7 +234,7 @@ static void http_response_analysis(char *res)
     // 获取内容
     Content_len = atoi(info);
   }
-  // 正文描述，获取文件名
+  // 正文描述,获取文件名
   else if(strstr(res,"Content-Disposition")){
     char* flag="filename=";
     char* info=strstr(res,flag)+strlen(flag);
@@ -245,6 +251,10 @@ static void http_response_analysis(char *res)
 // 在ESP32 的应用循环中回调
 int http_data_handle(char *buf,uint16_t len)
 {
+  if(onenet_res==1){
+    onenet_res=0;
+    printf("ONENET RESPONDING...\r\n");
+  }
   // 控制位 
   if(!(http_flag & BIT_0))return 0;
   
@@ -302,6 +312,9 @@ int http_data_handle(char *buf,uint16_t len)
   return 0;
 }
 
+/***********************************************
+*  ONENET 的升级请求任务
+***********************************************/
 // 向服务器发送检查版本请求 任务1
 static void OTA_check_update(void)
 {
@@ -362,6 +375,9 @@ static void OTA_POST_version(void)
   http_post_request(url,"application/json",Content,strlen(Content));
 }
 
+/***********************************************
+*  应用中处理发送 升级 请求的序列
+***********************************************/
 // 进行 http 请求的处理函数
 // 包含进行 版本上传 和 OTA更新固件
 static int http_request_handle(void)
@@ -454,6 +470,9 @@ static void http_request_retry(void)
   else REQUEST_OK;
 }
 
+/***********************************************
+*  http 请求的正文处理
+***********************************************/
 // 编写在原始json数据中的字符串比较函数
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) 
 {
@@ -597,7 +616,7 @@ static void http_respond_handle(void)
     // 处理结果
     if(FlashDestination >= ota_partition_start + file_size){
       debug_ota(HTTP_RECV"Progress 100%%\r\n");
-      debug_ota("APP%d OTA update Successfully!FW version:%s\r\n",download_part,target_version);
+      debug_info(INFO"APP%d OTA update Successfully!FW version:%s\r\n",download_part,target_version);
       debug("Name: %s \r\n",(char*)file_name);
       debug("Size: %d Bytes\r\n",file_size);
       // 写标志
@@ -796,7 +815,6 @@ static void http_request_timeout()
 // 进行 ota 升级系统的初始化
 void OTA_system_init(void)
 {
-  jsmn_init(&parser);
   softTimer_create(HTTP_REQUEST_ID,MODE_ONE_SHOT,http_request_timeout);
   http_system_reset();     // 首次复位
 }
@@ -811,7 +829,7 @@ void OTA_system_loop(void)
 // 进行一次 OTA 更新
 // flag:0上报版本
 // 1：进行OTA升级
-void OTA_mission_start(char flag)
+void OTA_mission_start(char num)
 {
   if(esp32_link!=1)return ;
     
@@ -823,7 +841,7 @@ void OTA_mission_start(char flag)
   
   if(!(http_flag & BIT_0)){
     http_system_reset();     // 首次复位
-    if(flag)
+    if(num)
       current_list=ota_update_list;
     else current_list=post_version_list;
     
@@ -853,8 +871,8 @@ void OTA_mission_start(char flag)
     }
 
     // 启动更新
-    if(flag)
-      printf("download partition is app%d,start:0x%08x,size:%d Bytes\r\n",
+    if(num==1)
+      debug_info(INFO"download partition is app%d,start:0x%08x,size:%d Bytes\r\n",
         download_part,ota_partition_start,ota_partition_size);
     
     updating =1;

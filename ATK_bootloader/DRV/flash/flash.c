@@ -140,7 +140,7 @@ void write_sys_parameter()
 {
   sys_parameter.parameter_flag=FLAG_OK;
   if(SYS_PARAMETER_WORD_SIZE<=SYS_PARAMETER_SIZE/4 && SYS_PARAMETER_WORD_SIZE==SYS_PARAMETER_WRITE){
-    debug_info(INFO"System Parameter Write Success!\r\n");
+//    debug_info(INFO"System Parameter Write Success!\r\n");
   }else{
     sys_parameter.parameter_flag=FLAG_NOK;
     debug_err(ERR"System Parameter Write Failed!");

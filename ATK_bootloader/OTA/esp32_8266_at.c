@@ -1,4 +1,4 @@
-#include "esp32_at.h"
+#include "esp32_8266_at.h"
 #include "usart3.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -10,12 +10,16 @@
 #include "led.h"
 #include "ota.h"
 
+/********************************************
+* 本文件兼容8266
+********************************************/
+
 // 复位引脚 PF6
 #define ESP32_RESET_GPIO          GPIOF
 #define ESP32_RESET_RCC           RCC_AHB1Periph_GPIOF
 #define ESP32_RESET_PIN           GPIO_Pin_6
 // 连接服务器
-#define RECV_CMD_BUF_SIZE           128
+#define RECV_CMD_BUF_SIZE           512     // 避免8266上电错误信息
 #define ESP32_RES                   "ESP32-->"
 #define ESP32_SEND                  "ESP32<--"
 #define TARGET                      "ESP32"
@@ -238,7 +242,7 @@ static void esp32_reply_analysis(char* valid_reply)
   }
   // 当前回复没有处理
   else{
-    debug_err("reply:%s not process\r\n",valid_reply);
+//    debug_err("reply:%s not process\r\n",valid_reply);
   }
 }
 

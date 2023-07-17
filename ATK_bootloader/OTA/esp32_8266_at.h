@@ -1,5 +1,5 @@
-#ifndef __ESP32_AT_H__
-#define __ESP32_AT_H__
+#ifndef __ESP32_8266_AT_H__
+#define __ESP32_8266_AT_H__
 #include "stm32f4xx_conf.h"
 #include "sys.h" 
 
