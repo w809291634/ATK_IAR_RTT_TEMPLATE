@@ -6,6 +6,7 @@
 #define WIFI_SSID               "Xiaomi_B596"
 #define WIFI_PASSWD             "WH15572388670LOL"
 #define SYS_FW_VERSION          "V1.0"
+#define DEFAULT_PARTITION       2
 
 /** 系统参数类型 **/
 typedef struct{

@@ -3,11 +3,11 @@
 #include "stm32f4xx_conf.h"
 #include "sys.h" 
 
-extern char esp32_link;    
+extern char esp_link;    
 
-int esp32_command_handle(char* buf,unsigned short len);
-void esp32_at_app_init(void);
-void esp32_at_app_cycle(void);
-void esp32_connect_start(void);
-void esp32_reset(void);
+int esp_command_handle(char* buf,unsigned short len);
+void esp_at_app_init(void);
+void esp_at_app_cycle(void);
+void esp_connect_start(void);
+void esp_reset(void);
 #endif

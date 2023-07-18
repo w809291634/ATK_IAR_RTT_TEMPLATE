@@ -17,13 +17,13 @@
 #define OTA_TASK6                  "OTA_POST_version"
 
 /** 用户配置 **/
-#define HTTP_DATA_BUF_SIZE          550
-#define HTTP_HEADER_BUF_SIZE        50
-#define MAX_ERROR_NUM               3  // 重试次数
-#define MAX_TOKENS                  40
-#define FRAGMENT_SIZE               512  // 数据包大小
+#define HTTP_DATA_BUF_SIZE          550       // 接收 HTTP 数据的缓存区
+#define MAX_ERROR_NUM               3         // 重试次数
+#define MAX_TOKENS                  40        // 用于解析 json 字符串
+#define FRAGMENT_SIZE               512       // 下载固件时，每个数据包大小
 #define HTTP_SEND                   "ONENET<--"
 #define HTTP_RECV                   "ONENET-->"
+#define HTTP_RESPOND                "ONENET responding..."
 
 static char http_flag;              // 标志位 
                                     // 位0 1：进行一次任务
@@ -43,13 +43,13 @@ char IOT_HOST[]= "iot-api.heclouds.com";
 char IOT_API_URL[]= "https://iot-api.heclouds.com/fuse-ota";
 
 /** 控制发送逻辑 **/
-static char request_index;          // 请求的索引
+static char request_index;                              // 请求的列表索引，获取不同的执行序列
 static char current_request[40];
 static char err_times;
 static uint8_t* current_list;
 static uint8_t post_version_list[]={6,0xff};            // 发送版本的请求列表
 static uint8_t ota_update_list[]={1,2,3,4,5,6,0xff};    // OTA 升级的请求列表
-static uint8_t onenet_res;
+static uint8_t onenet_res;                              // 标记 ONENET 处于响应状态
 /** 处理回复 **/
 // 当前请求的数据缓存
 static char http_buf[HTTP_DATA_BUF_SIZE]; // HTTP 协议的正文 和 接收处理buf
@@ -60,26 +60,26 @@ static uint8_t Content_Type;              // 正文类型  0：未知 1：json  2:octet-
 static uint16_t Content_len;              // 正文长度
 static char file_name[50];                // 正文长度
 // 存储正文信息
-static char res_msg[12];
+static char res_msg[12];                  // 返回的消息
 static char fw_version[24];               // 当前的版本
 static char target_version[24];           // 当前的升级版本
-static uint32_t tid;
-static uint32_t file_size;
+static uint32_t tid;                      // tid 号码
+static uint32_t file_size;                // 文件大小
 // 下载分区信息
-static uint32_t ota_partition_start;
-static uint32_t ota_partition_size;
-static uint16_t ota_fragment;
-static uint16_t ota_total_fragment;
+static uint32_t ota_partition_start;      // 分区起始地址
+static uint32_t ota_partition_size;       // 当前分区大小
+static uint16_t ota_fragment;             // 当前请求的片段号，一个片段大小为 FRAGMENT_SIZE
+static uint16_t ota_total_fragment;       // 总的片段号码
 static uint32_t FlashDestination;
 
 /** json数据处理 **/
 static jsmn_parser parser;
 static jsmntok_t tokens[MAX_TOKENS];
 
-// esp32发送数据到服务器
-static void esp32_send_IOT(const char * strbuf, unsigned short len)
+// esp发送数据到服务器
+static void esp_send_IOT(const char * strbuf, unsigned short len)
 {
-  if(esp32_link){
+  if(esp_link){
     usart3_puts(strbuf,len);
     debug_ota(HTTP_SEND"%s\r\n",current_request);
     onenet_res=1;
@@ -135,7 +135,7 @@ static void http_system_reset()
 static void http_get_request(char *url,char* Content_Type,char* range)
 {
   http_request_reset();
-  if(esp32_link){
+  if(esp_link){
     char http_request[512]={0};
     char buf[256];
     // 请求行
@@ -156,7 +156,7 @@ static void http_get_request(char *url,char* Content_Type,char* range)
     strcat(http_request,"\r\n");
     
     // 向服务器发送请求
-    esp32_send_IOT(http_request,strlen(http_request));
+    esp_send_IOT(http_request,strlen(http_request));
   }else{
     debug_info(INFO"Need to connect server");
   }
@@ -167,7 +167,7 @@ static void http_get_request(char *url,char* Content_Type,char* range)
 static void http_post_request(char *url,char* Content_Type,char* Content,int Content_len)
 {
   http_request_reset();
-  if(esp32_link){
+  if(esp_link){
     char http_request[512]={0};
     char buf[256];
     // 请求行
@@ -190,7 +190,7 @@ static void http_post_request(char *url,char* Content_Type,char* Content,int Con
     strcat(http_request,Content);
     
     // 向服务器发送请求
-    esp32_send_IOT(http_request,strlen(http_request));
+    esp_send_IOT(http_request,strlen(http_request));
   }else{
     debug_info(INFO"Need to connect server");
   }
@@ -248,12 +248,12 @@ static void http_response_analysis(char *res)
 
 // http请求的数据结果
 // 这里仅仅缓存 返回信息
-// 在ESP32 的应用循环中回调
+// 在ESP 的应用循环中回调
 int http_data_handle(char *buf,uint16_t len)
 {
   if(onenet_res==1){
     onenet_res=0;
-    printf("ONENET RESPONDING...\r\n");
+    debug_ota(HTTP_RESPOND"\r\n");
   }
   // 控制位 
   if(!(http_flag & BIT_0))return 0;
@@ -382,7 +382,7 @@ static void OTA_POST_version(void)
 // 包含进行 版本上传 和 OTA更新固件
 static int http_request_handle(void)
 {
-  if(esp32_link!=1) return 0;
+  if(esp_link!=1) return 0;
   
   // 控制位 
   if(!(http_flag & BIT_0))return 0;
@@ -444,7 +444,7 @@ static int http_request_handle(void)
     /* 列表请求完成 */
     case 0xff:{
       http_system_reset();
-      debug_info(INFO"MISSION SUCCESS!\r\n");
+      debug_info(INFO"HTTP request sequence completed\r\n");
     }return 1;
     
     default:{
@@ -812,6 +812,9 @@ static void http_request_timeout()
   http_request_retry();
 }
 
+/***********************************************
+*  本文件的外部接口
+***********************************************/
 // 进行 ota 升级系统的初始化
 void OTA_system_init(void)
 {
@@ -831,7 +834,7 @@ void OTA_system_loop(void)
 // 1：进行OTA升级
 void OTA_mission_start(char num)
 {
-  if(esp32_link!=1)return ;
+  if(esp_link!=1)return ;
     
   // 判断是否正在进行更新
   if(updating==1){
@@ -841,15 +844,15 @@ void OTA_mission_start(char num)
   
   if(!(http_flag & BIT_0)){
     http_system_reset();     // 首次复位
-    if(num)
-      current_list=ota_update_list;
+    // 选择 请求 序列
+    if(num) current_list=ota_update_list;
     else current_list=post_version_list;
     
-    /********************测试**************/
-    strcpy(sys_parameter.app1_fw_version,"V1.0");
-    strcpy(sys_parameter.app2_fw_version,"V1.0");
-    write_sys_parameter();
-    /********************测试**************/
+//    /********************测试**************/
+//    strcpy(sys_parameter.app1_fw_version,"V1.0");
+//    strcpy(sys_parameter.app2_fw_version,"V1.0");
+//    write_sys_parameter();
+//    /********************测试**************/
 
     // 进行分区判断
     if(download_part==1){

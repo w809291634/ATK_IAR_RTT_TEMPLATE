@@ -38,10 +38,10 @@ static void system_init()
 static void hardware_init()
 {
   systick_init();                         // 时钟初始化
-  esp32_reset();
+  esp_reset();                            // esp进行一次硬件复位
   led_init();                             // 初始化 LED
   softTimer_Init();                       // 软件定时器初始化
-  esp32_at_hw_init(115200);               // 初始化 ESP8266 WiFi at串口 
+  esp_at_hw_init(115200);                 // 初始化 ESP WiFi at串口 
 }
 
 // 应用初始化
@@ -49,7 +49,7 @@ static void app_init()
 {
   sys_parameter_init();
   register_user_cmd();
-  esp32_at_app_init();
+  esp_at_app_init();
   OTA_system_init();
   led_app_init(); 
 }
@@ -62,12 +62,10 @@ int main(void)
   app_init();
   while(1){
     softTimer_Update();           // 软件定时器扫描
-    esp32_at_app_cycle();         // esp32 的应用循环
+    esp_at_app_cycle();           // esp 的应用循环
     OTA_system_loop();            // OTA 系统的应用循环
-    if(usart1_mode==0)
-      shell_app_cycle();          // shell 控制台应用循环 
-    else{
-      IAP_download();
-    }
+    if(usart1_mode==0) 
+      shell_app_cycle();          // shell 控制台模式
+    else IAP_download();          // IAP 下载模式
   }
 }

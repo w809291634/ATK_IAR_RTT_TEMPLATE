@@ -25,13 +25,13 @@
 #define USARTx_RINGBUF_SIZE                 256
 
 /**************************user config*************************/
-static char esp32_at_ringbuf[USARTx_RINGBUF_SIZE]={0};
+static char esp_at_ringbuf[USARTx_RINGBUF_SIZE]={0};
 static volatile unsigned short Read_Index,Write_Index;
 extern uint16_t UART_GetRemainDate(char* data, char* ringbuf, uint16_t size, uint16_t w_index, uint16_t r_index) ;
 
 //初始化IO 串口 
 //bound:波特率
-void esp32_at_hw_init(u32 bound)
+void esp_at_hw_init(u32 bound)
 {
   //GPIO端口设置
   GPIO_InitTypeDef GPIO_InitStructure={0};
@@ -86,24 +86,24 @@ void usart3_puts(const char * strbuf, unsigned short len)
   }
 }
 
-// esp32 应用程序获取输入数据
-void esp32_usart_data_handle()
+// esp 应用程序获取输入数据
+void esp_usart_data_handle()
 {
   if(Write_Index!=Read_Index){
     /* 取环形缓存区剩余数据 */
     char temp[USARTx_RINGBUF_SIZE]={0};
-    uint16_t data_len=UART_GetRemainDate(temp,esp32_at_ringbuf,USARTx_RINGBUF_SIZE,Write_Index,Read_Index);
+    uint16_t data_len=UART_GetRemainDate(temp,esp_at_ringbuf,USARTx_RINGBUF_SIZE,Write_Index,Read_Index);
     
     /* 接收并处理此处数据 */
-    if(esp32_link)http_data_handle(temp,data_len);        // esp32 的http请求数据处理
+    if(esp_link)http_data_handle(temp,data_len);                // esp 的http请求数据处理
     else{
-      int ret=esp32_command_handle(temp,data_len);        // esp32 的AT指令回调
+      int ret=esp_command_handle(temp,data_len);                // esp 的AT指令回调
       if(ret==-1)
         debug_err(ERR"Read_Index:%d usart3_data:%s\r\n",Read_Index,temp);
     }
     
     /* 数据处理结束 */
-    Read_Index = (Read_Index+data_len)% USARTx_RINGBUF_SIZE;          // 下次读取数据的起始位置，防止超出缓存区最大索引   
+    Read_Index = (Read_Index+data_len)% USARTx_RINGBUF_SIZE;    // 下次读取数据的起始位置，防止超出缓存区最大索引   
   }
 }
 
@@ -112,7 +112,7 @@ void USART3_IRQHandler(void)
 {
   if(USART_GetITStatus( USARTx, USART_IT_RXNE ) == SET )
   {	
-    esp32_at_ringbuf[Write_Index] = (char)USART_ReceiveData(USARTx);
+    esp_at_ringbuf[Write_Index] = (char)USART_ReceiveData(USARTx);
     Write_Index++;
     Write_Index = Write_Index % USARTx_RINGBUF_SIZE;
   }	
