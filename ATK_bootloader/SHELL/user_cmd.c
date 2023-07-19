@@ -9,7 +9,7 @@
 #include "flash.h"
 #include "ota.h"
 
-void SoftReset(void* arg)
+static void SoftReset(void* arg)
 { 
   (void)arg;
   __set_FAULTMASK(1); // 关闭所有中端
@@ -17,13 +17,13 @@ void SoftReset(void* arg)
 }
 
 // esp 触发连接AP
-void connect_server(void* arg)
+static void connect_server(void* arg)
 { 
   esp_connect_start();
 }
 
 // 设置 ESP 的 wifi名称 和 密码
-void esp_set_ssid_pass(void * arg)
+static void esp_set_ssid_pass(void * arg)
 {
   char * argv[3];
   int argc =cmdline_strtok((char*)arg,argv,3);
@@ -42,7 +42,7 @@ void esp_set_ssid_pass(void * arg)
 }
 
 // 读取 系统 参数
-void sys_information_get(void * arg)
+static void sys_information_get(void * arg)
 {
   SYS_PARAMETER_READ;
   
@@ -59,21 +59,19 @@ void sys_information_get(void * arg)
 }
 
 // 启动 IAP 模式
-void start_IAP_mode(void * arg)
+// 默认升级 2 号分区
+static void start_IAP_mode(void * arg)
 {
   char * argv[2];
   int argc =cmdline_strtok((char*)arg,argv,2);
-  if(argc<2){
-    debug_info(INFO"please input %s [<partition>] \r\n",IAP_CMD);
-    return;
-  }
-  download_part=atoi(argv[1]);
+  if(argc<2)download_part = DEFAULT_PARTITION;
+  else download_part=atoi(argv[1]);
   usart1_mode=1;
 }
 
 // 启动 APP
 // 默认启动 2 号分区
-void Start_APP(void * arg)
+static void Start_APP(void * arg)
 {
   char * argv[2];
   int partition;
@@ -88,7 +86,7 @@ void Start_APP(void * arg)
 
 // 开始进行OTA升级。命令指定分区
 // 默认升级 2 号分区
-void __OTA_update_start(void * arg)
+static void __OTA_update_start(void * arg)
 {
   char * argv[2];
   int argc =cmdline_strtok((char*)arg,argv,2);
@@ -99,7 +97,7 @@ void __OTA_update_start(void * arg)
 
 // 发送升级版本
 // 默认发布 2 号分区
-void __OTA_post_version(void * arg)
+static void __OTA_post_version(void * arg)
 {
   char * argv[2];
   int argc =cmdline_strtok((char*)arg,argv,2);
