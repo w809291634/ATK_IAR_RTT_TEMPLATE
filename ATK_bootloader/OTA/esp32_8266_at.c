@@ -19,7 +19,7 @@
 #define ESP_RESET_RCC               RCC_AHB1Periph_GPIOF
 #define ESP_RESET_PIN               GPIO_Pin_6
 // 连接服务器
-#define RECV_CMD_BUF_SIZE           512     // 避免8266上电错误信息
+#define RECV_CMD_BUF_SIZE           256 
 #define ESP_RES                     "ESP-->"
 #define ESP_SEND                    "ESP<--"
 #define CMD_OK                      {esp_flag |= BIT_3;}
@@ -207,6 +207,12 @@ static void esp_reply_analysis(char* valid_reply)
   // 处理 AT+CWJAP 连接AP的正确情况
   else if(strstr(valid_reply, "WIFI CONNECTED")){  
     // 显示
+    // 正点原子固件这里回复多了\n,进行去除
+    while(1){
+      char* p=strchr(valid_reply,'\n');
+      if(p==NULL)break;
+      p[0]=' '; 
+    }
     debug_at(ESP_RES"%s\r\n",valid_reply);
   }
   else if(strstr(valid_reply, "WIFI GOT IP")){  
@@ -226,7 +232,7 @@ static void esp_reply_analysis(char* valid_reply)
   else if(strstr(valid_reply, "ready")){  
     // 显示
     debug_at(ESP_RES"%s\r\n",valid_reply);
-    esp_connect_start();        // 主动进行连接
+    esp_connect_start();            // 主动进行连接
   }
   // 处理 AT+CIPSTART
   else if(strstr(valid_reply, "CONNECT")){  
@@ -253,7 +259,11 @@ int esp_command_handle(char* buf,unsigned short len)
     debug_at(ESP_RES">\r\n");
     CMD_OK;
   }
-
+  
+  /** 进行过滤 **/
+  if(!isASCIIString(buf))
+    return -2;
+  
   /** 条件判断 **/
   // 当前 指令处理缓存 空间足够
   if(strlen(recv_buf)+len>RECV_CMD_BUF_SIZE){
@@ -262,7 +272,7 @@ int esp_command_handle(char* buf,unsigned short len)
     return -1;
   }
   strncat(recv_buf,buf,len);
-
+  
   /** 处理接收缓存 **/
   char cycle_counts=0;
   while(1){

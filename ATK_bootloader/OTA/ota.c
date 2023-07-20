@@ -395,22 +395,15 @@ static int http_request_handle(void)
   switch(cmd_id){
     /* 检查升级 */
     case 1:{
-      // 标记分区状态
-      if(download_part==1){
-        sprintf(current_request,"%s(%s)",OTA_TASK1,sys_parameter.app1_fw_version);
-        sys_parameter.app1_flag=APP_ERR;
-      }
-      else if(download_part==2){
+      if(download_part==1)
+        sprintf(current_request,"%s(%s)",OTA_TASK1,sys_parameter.app1_fw_version); 
+      else if(download_part==2)
         sprintf(current_request,"%s(%s)",OTA_TASK1,sys_parameter.app2_fw_version);
-        sys_parameter.app2_flag=APP_ERR;
-      }
-      write_sys_parameter();
-      
       OTA_check_update();
       softTimer_start(HTTP_REQUEST_ID,5000);
     }break;
     /* 进行分区下载 */
-    case 2:{
+    case 2:{      
       sprintf(temp,"%d-%d",0+512*ota_fragment,511+512*ota_fragment);
       sprintf(current_request,"%s range:%s",OTA_TASK2,temp);
       OTA_download_package(temp);
@@ -496,8 +489,9 @@ static void http_respond_handle(void)
   if(strstr(current_request,OTA_TASK1)){
     // 检查状态行
     if(stats_code!=200 || Content_Type!=1){
-      http_request_retry(); 
       debug_err(ERR"status error,code:%d \r\n",stats_code);
+      http_request_retry(); 
+      goto RESET;
     }
     
     // 获取JSON中的对象数据
@@ -538,6 +532,11 @@ static void http_respond_handle(void)
       
       // 根据信息处理下一步
       if(strstr(res_msg,"succ")) {
+        /* 标记分区状态 */
+        if(download_part==1) sys_parameter.app1_flag=APP_ERR;
+        else if(download_part==2) sys_parameter.app2_flag=APP_ERR;
+        write_sys_parameter();
+        
         /* 获取信息 */
         FlashDestination = ota_partition_start;
         ota_total_fragment = file_size/FRAGMENT_SIZE + ((file_size%FRAGMENT_SIZE)?1:0);
@@ -587,8 +586,10 @@ static void http_respond_handle(void)
   // 处理下载任务
   else if(strstr(current_request,OTA_TASK2)){
     if(stats_code!=206 || Content_Type!=2 || FlashDestination==0){
-      http_request_retry(); 
       debug_err(ERR"status error,code:%d \r\n",stats_code);
+      if(stats_code==200) http_system_reset();    // 当前版本一致或者其他，具体见官方手册
+      http_request_retry(); 
+      goto RESET;
     }
 
     uint32_t RamSource = (uint32_t)http_buf;
@@ -647,8 +648,9 @@ static void http_respond_handle(void)
   {
     // 检查状态行
     if(stats_code!=200 || Content_Type!=1){
-      http_request_retry(); 
       debug_err(ERR"status error,code:%d \r\n",stats_code);
+      http_request_retry(); 
+      goto RESET;
     }
     
     // 获取JSON中的对象数据
@@ -683,8 +685,9 @@ static void http_respond_handle(void)
   {
     // 检查状态行
     if(stats_code!=200 || Content_Type!=1){
-      http_request_retry(); 
       debug_err(ERR"status error,code:%d \r\n",stats_code);
+      http_request_retry(); 
+      goto RESET;
     }
     
     // 获取JSON中的对象数据
@@ -725,8 +728,9 @@ static void http_respond_handle(void)
   {
     // 检查状态行
     if(stats_code!=200 || Content_Type!=1){
-      http_request_retry(); 
       debug_err(ERR"status error,code:%d \r\n",stats_code);
+      http_request_retry(); 
+      goto RESET;
     }
     
     // 获取JSON中的对象数据
@@ -766,8 +770,9 @@ static void http_respond_handle(void)
   {
     // 检查状态行
     if(stats_code!=200 || Content_Type!=1){
-      http_request_retry(); 
       debug_err(ERR"status error,code:%d \r\n",stats_code);
+      http_request_retry(); 
+      goto RESET;
     }
     
     // 获取JSON中的对象数据
@@ -797,7 +802,8 @@ static void http_respond_handle(void)
       }else http_request_retry();
     }else http_request_retry();
   }
-  
+
+RESET:  
   /* 一个请求处理结束 */
   http_request_reset();
 }

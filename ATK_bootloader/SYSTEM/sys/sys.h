@@ -124,6 +124,7 @@ void* my_memcpy(void* dest, const void* src, size_t num);
 int list_contains_str(char* str,char** list,int len);
 void leftShiftCharArray(char* arr, int size, int shiftAmount);
 void sys_parameter_init(void);
+int isASCIIString(const char* str);
 #endif
 
 

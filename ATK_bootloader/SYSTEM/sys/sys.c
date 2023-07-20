@@ -72,6 +72,15 @@ void sys_parameter_init(void)
   }
 }
 
+int isASCIIString(const char* str)
+{
+  while(*str){
+    if (*str <= 0 || *str > 127) return 0;    // ²»ÊÇ ASCII ×Ö·û´®
+    str++;
+  }
+  return 1;  // ÊÇ ASCII ×Ö·û´®
+}
+
 #ifdef  USE_FULL_ASSERT
  /**
    * @brief  Reports the name of the source file and the source line number

@@ -39,6 +39,7 @@ static void hardware_init()
 {
   systick_init();                         // 时钟初始化
   esp_reset();                            // esp进行一次硬件复位
+  hw_ms_delay(50);                        // 过滤部分脏字符，最大150ms
   led_init();                             // 初始化 LED
   softTimer_Init();                       // 软件定时器初始化
   esp_at_hw_init(115200);                 // 初始化 ESP WiFi at串口 
