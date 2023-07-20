@@ -8,6 +8,14 @@
 #define SYS_FW_VERSION          "V1.0"
 #define DEFAULT_PARTITION       2
 
+/** 服务器 **/
+#define IOT_SERVER_IP           "iot-api.heclouds.com"
+#define IOT_SERVER_PORT         80
+#define IOT_PRO_ID_NAME         "m5005irgK9/stm32_temperature"
+#define IOT_AUTHORIZATION       "version=2022-05-01&res=userid%2F315714&et=1720619752&method=sha1&sign=GG%2FUnpuqy6GC4L%2B45enSav3y3jA%3D"
+#define IOT_HOST                "iot-api.heclouds.com"
+#define IOT_API_URL             "https://iot-api.heclouds.com/fuse-ota"
+
 /** 系统参数类型 **/
 typedef struct{
   char wifi_ssid[48];                 // wifi名称

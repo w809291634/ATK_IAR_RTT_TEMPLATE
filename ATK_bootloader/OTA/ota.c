@@ -36,11 +36,10 @@ static char http_flag;              // 标志位
 #define REQUEST_SENDED              {http_flag &= ~BIT_3;}  
 
 /** 服务器 **/
-char IOT_PRO_ID_NAME[]="m5005irgK9/stm32_temperature";
-char IOT_SERVER_IP[] ="iot-api.heclouds.com";
-char IOT_AUTHORIZATION[]="version=2022-05-01&res=userid%2F315714&et=1720619752&method=sha1&sign=GG%2FUnpuqy6GC4L%2B45enSav3y3jA%3D";
-char IOT_HOST[]= "iot-api.heclouds.com";
-char IOT_API_URL[]= "https://iot-api.heclouds.com/fuse-ota";
+static char iot_pro_id_name[]=IOT_PRO_ID_NAME;
+static char iot_authorization[]=IOT_AUTHORIZATION;
+static char iot_host[]= IOT_HOST;
+static char iot_api_url[]= IOT_API_URL;
 
 /** 控制发送逻辑 **/
 static char request_index;                              // 请求的列表索引，获取不同的执行序列
@@ -144,9 +143,9 @@ static void http_get_request(char *url,char* Content_Type,char* range)
     // 协议头
     sprintf(buf,"Content-Type:%s\r\n",Content_Type);
     strcat(http_request,buf);
-    sprintf(buf,"Authorization:%s\r\n",IOT_AUTHORIZATION);
+    sprintf(buf,"Authorization:%s\r\n",iot_authorization);
     strcat(http_request,buf);
-    sprintf(buf,"host:%s\r\n",IOT_HOST);
+    sprintf(buf,"host:%s\r\n",iot_host);
     strcat(http_request,buf);
     if(range!=NULL){
       sprintf(buf,"range:%s\r\n",range);
@@ -176,9 +175,9 @@ static void http_post_request(char *url,char* Content_Type,char* Content,int Con
     // 协议头
     sprintf(buf,"Content-Type:%s\r\n",Content_Type);
     strcat(http_request,buf);
-    sprintf(buf,"Authorization:%s\r\n",IOT_AUTHORIZATION);
+    sprintf(buf,"Authorization:%s\r\n",iot_authorization);
     strcat(http_request,buf);
-    sprintf(buf,"host:%s\r\n",IOT_HOST);
+    sprintf(buf,"host:%s\r\n",iot_host);
     strcat(http_request,buf);
     sprintf(buf,"Content-Length:%d\r\n",Content_len);
     strcat(http_request,buf);
@@ -320,7 +319,7 @@ static void OTA_check_update(void)
 {
   char url[150];
   sprintf(url,"%s/%s/check?type=1&version=%s",
-      IOT_API_URL,IOT_PRO_ID_NAME,fw_version);
+      iot_api_url,iot_pro_id_name,fw_version);
   http_get_request(url,"application/json",NULL);
 }
 
@@ -329,7 +328,7 @@ static void OTA_download_package(char* range)
 {
   char url[150];
   sprintf(url,"%s/%s/%d/download",
-      IOT_API_URL,IOT_PRO_ID_NAME,tid);
+      iot_api_url,iot_pro_id_name,tid);
   http_get_request(url,"application/json",range);
 }
 
@@ -339,7 +338,7 @@ static void OTA_POST_status(void)
   char url[150];
   char Content[20];
   sprintf(url,"%s/%s/%d/status",
-      IOT_API_URL,IOT_PRO_ID_NAME,tid);
+      iot_api_url,iot_pro_id_name,tid);
 
   strcpy(Content,"{\"step\":201}");     // 201	升级成功，此时会把设备的版本号修改为任务的目标版本
   http_post_request(url,"application/json",Content,strlen(Content));
@@ -350,7 +349,7 @@ static void OTA_check_status(void)
 {
   char url[150];
   sprintf(url,"%s/%s/%d/check",
-      IOT_API_URL,IOT_PRO_ID_NAME,tid);
+      iot_api_url,iot_pro_id_name,tid);
   http_get_request(url,"application/json",NULL);
 }
 
@@ -359,7 +358,7 @@ static void OTA_check_version(void)
 {
   char url[150];
   sprintf(url,"%s/%s/version",
-      IOT_API_URL,IOT_PRO_ID_NAME);
+      iot_api_url,iot_pro_id_name);
   http_get_request(url,"application/json",NULL);
 }
 
@@ -369,7 +368,7 @@ static void OTA_POST_version(void)
   char url[150];
   char Content[70];
   // url
-  sprintf(url,"%s/%s/version",IOT_API_URL,IOT_PRO_ID_NAME);
+  sprintf(url,"%s/%s/version",iot_api_url,iot_pro_id_name);
   // 正文
   sprintf(Content,"{\"f_version\":\"%s\",\"s_version\":\"V1.0\"}",fw_version);
   http_post_request(url,"application/json",Content,strlen(Content));
