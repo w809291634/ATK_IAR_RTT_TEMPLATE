@@ -1,18 +1,18 @@
-
-::´ò¿ª»ØÏÔ
+ï»¿
+::æ‰“å¼€å›žæ˜¾
 @echo on
 
-::É¾³ý*.depÎÄ¼þ
+::åˆ é™¤*.depæ–‡ä»¶
 del=/s /a /f "*.tmp"
 del=/s /a /f "*.bak"
 del=/s /a /f "*.dep"
 
-::É¾³ý "Exe" "List" "Obj""settings"ÎÄ¼þ¼Ð
+::åˆ é™¤ "Exe" "List" "Obj""settings"æ–‡ä»¶å¤¹
 for /f "delims=" %%i in ('dir /ad /b /s "Exe" "List" "Obj" "settings"') do (
    rd /s /q "%%i"
 )
 
-::É¾³ý¿ÕÎÄ¼þ¼Ð
+::åˆ é™¤ç©ºæ–‡ä»¶å¤¹
 for /f "tokens=*" %%i in ('dir/s/b/ad^|sort /r') do rd "%%i"
 
 exit
