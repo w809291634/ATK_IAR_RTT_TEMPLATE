@@ -22,7 +22,7 @@ void _sys_exit(int x)
 int fputc(int ch, FILE *f)
 {      
   usart1_put(ch);
-  return 0;
+  return ch;
 }
 
 void* my_memcpy(void* dest, const void* src, size_t num)
