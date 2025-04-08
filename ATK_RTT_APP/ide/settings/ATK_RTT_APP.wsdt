@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+  <CurrentConfigs><Project>ATK_RTT_APP/Debug</Project></CurrentConfigs></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>197</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+    </Static>
+    <Windows>
+      
+    <Wnd1>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-13469-1824</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>ATK_RTT_APP</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread/components</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread/components/finsh</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread/components/libc</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread/components/src</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread/libcpu</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread/src</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread_user</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread_user/DRV</ExpandedNode><ExpandedNode>ATK_RTT_APP/rtthread_user/DRV_FRAME</ExpandedNode><ExpandedNode>ATK_RTT_APP/zonesion</ExpandedNode><ExpandedNode>ATK_RTT_APP/zonesion/app</ExpandedNode><ExpandedNode>ATK_RTT_APP/zonesion/common</ExpandedNode><ExpandedNode>ATK_RTT_APP/zonesion/common/BSP</ExpandedNode><ExpandedNode>ATK_RTT_APP/zonesion/common/CmBacktrace</ExpandedNode><ExpandedNode>ATK_RTT_APP/zonesion/common/DRV</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd1></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\bsp\stm32\libraries\HAL_Drivers\drv_usart.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>0</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\bsp\stm32\libraries\HAL_Drivers\drv_gpio.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>0</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><ActiveTab>1</ActiveTab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-046D8858><key>iaridepm.enu1</key></Toolbar-046D8858></Sizes></Row0></Top><Left><Row0><Sizes><Wnd1><Rect><Top>-2</Top><Left>-2</Left><Bottom>736</Bottom><Right>288</Right><x>-2</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>130208</sizeHorzCX><sizeHorzCY>256082</sizeHorzCY><sizeVertCX>188802</sizeVertCX><sizeVertCY>944942</sizeVertCY></Rect></Wnd1></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes/></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+
