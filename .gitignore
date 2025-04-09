@@ -1,2 +1,5 @@
 ATK_bootloader/OBJ
 Debug/
+settings/
+*.dbgconf
+*.dep
